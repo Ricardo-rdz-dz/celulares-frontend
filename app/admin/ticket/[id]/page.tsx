@@ -51,7 +51,7 @@ export default function TicketDetail() {
   };
   // Función para abrir WhatsApp con un mensaje predeterminado
 // Función para abrir WhatsApp con un mensaje predeterminado
-  const abrirWhatsApp = () => {
+ const abrirWhatsApp = () => {
     try {
       const telefono = ticket.clientes?.telefono;
       if (!telefono) {
@@ -69,10 +69,19 @@ export default function TicketDetail() {
       // 2. Protegemos las variables por si alguna viene vacía
       const marca = ticket.equipos?.marca || 'equipo';
       const modelo = ticket.equipos?.modelo || '';
-      const estadoActual = String(ticket.estado || '').replace('_', ' ');
+      const estadoActual = String(ticket.estado || '');
       
-      // 3. Armamos el mensaje
-      const mensaje = `Hola ${ticket.clientes?.nombre}, te informamos desde MovilPlace que tu dispositivo${marca} ${modelo} se encuentra en estado: ${estadoActual}.`;
+      // 3. 🎯 DINÁMICO: Armamos el mensaje dependiendo del estado
+      let mensaje = '';
+      
+      if (estadoActual === 'ENTREGADO') {
+        // Mensaje especial de reseña + encuesta si ya se entregó
+        mensaje = `¡Hola ${ticket.clientes?.nombre}! 👋\n\nNos da mucho gusto haberte entregado tu ${marca} ${modelo} al 100% 📱✨\n\nPara nosotros es súper importante tu opinión. ¿Nos regalarías 1 minuto para calificarnos con 5 estrellas en Google? ⭐️⭐️⭐️⭐️⭐️\n\nNos ayuda muchísimo a crecer:\n👉 TU_ENLACE_DE_GOOGLE\n\nY si quieres dejas sugerencias, aquí está nuestra encuesta rápida:\n👉 https://forms.gle/TdJQcXYvyqJias5p6\n\n¡Gracias por confiar en MovilPlace!`;
+      } else {
+        // Mensaje estándar para cualquier otro estado (RECIBIDO, DIAGNOSTICO, etc.)
+        const estadoFormateado = estadoActual.replace(/_/g, ' ');
+        mensaje = `Hola ${ticket.clientes?.nombre}, te informamos desde MovilPlace que tu dispositivo ${marca} ${modelo} se encuentra en estado: ${estadoFormateado}.`;
+      }
       
       const url = `https://wa.me/${numeroConCodigo}?text=${encodeURIComponent(mensaje)}`;
       
