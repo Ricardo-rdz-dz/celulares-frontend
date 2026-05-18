@@ -11,6 +11,9 @@ export default function TicketDetail() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
+  const [costoTotal, setCostoTotal] = useState(0);
+  const [guardandoCosto, setGuardandoCosto] = useState(false);
+
   // Cargar los datos del ticket
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets/${ticketId}`)
@@ -25,9 +28,50 @@ export default function TicketDetail() {
       });
   }, [ticketId]);
 
-  // Función para cambiar el estado
+  // Este useEffect se asegura de mostrar el costo que ya estaba guardado en la BD
+  useEffect(() => {
+    if (ticket && ticket.costo_total) {
+      setCostoTotal(ticket.costo_total);
+    }
+  }, [ticket]);
+
+  // 3. La función que nos marcaba error (Guarda el dinero en la BD)
+  const guardarFinanzas = async () => {
+    setGuardandoCosto(true);
+    const saldo_restante = costoTotal - (ticket?.anticipo || 0);
+    
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets/${ticket.id}/finanzas`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ costo_total: costoTotal, saldo_restante })
+      });
+      
+      if(res.ok) {
+        alert('💰 Costos actualizados correctamente');
+        // Actualizamos el ticket local para que la pantalla refleje el cambio
+        setTicket({...ticket, costo_total: costoTotal, saldo_restante: saldo_restante});
+      } else {
+        alert('❌ Error al guardar los costos en el servidor');
+      }
+    } catch(e) {
+      console.error('Error al guardar finanzas:', e);
+      alert('Error de conexión al guardar finanzas');
+    }
+    setGuardandoCosto(false);
+  };
+
+// Función para cambiar el estado
   const cambiarEstado = async (nuevoEstado: string) => {
-    // Si la página tiene un estado de "Cargando", puedes activarlo aquí
+    // 🎯 VALIDACIÓN FINANCIERA: Alerta si hay saldo pendiente al entregar
+    const saldo = costoTotal - (ticket?.anticipo || 0);
+    if (nuevoEstado === 'ENTREGADO' && saldo > 0) {
+      const confirmar = window.confirm(
+        `⚠️ ATENCIÓN: El cliente tiene un saldo pendiente de $${saldo}.\n\n¿Confirmas que ya recibiste el pago y deseas marcar el equipo como ENTREGADO?`
+      );
+      if (!confirmar) return; // Si el usuario cancela, se detiene la ejecución aquí
+    }
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets/${ticket.id}/estado`, {
         method: 'PUT',
@@ -40,7 +84,7 @@ export default function TicketDetail() {
       if (res.ok) {
         // Actualizamos la pantalla instantáneamente sin recargar
         setTicket({ ...ticket, estado: nuevoEstado });
-        alert(`✅ Estado actualizado a ${nuevoEstado.replace('_', ' ')}`);
+        alert(`✅ Estado actualizado a ${nuevoEstado.replace(/_/g, ' ')}`);
       } else {
         alert('❌ Error al actualizar el estado');
       }
@@ -49,6 +93,8 @@ export default function TicketDetail() {
       alert('Error de conexión con el servidor');
     }
   };
+
+  
   // Función para abrir WhatsApp con un mensaje predeterminado
 // Función para abrir WhatsApp con un mensaje predeterminado
  // 1. TU FUNCIÓN ORIGINAL: Para enviar el estatus actual del equipo
@@ -211,7 +257,58 @@ export default function TicketDetail() {
                 </div>
               </div>
             </div>
+            {/* --- SECCIÓN DE FINANZAS Y LIQUIDACIÓN --- */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mt-6 mb-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">💰 Finanzas y Liquidación</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Anticipo Pagado</label>
+                    <div className="text-2xl font-black text-slate-700">${ticket.anticipo || 0}</div>
+                </div>
+                <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Costo Total de Reparación</label>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl font-bold text-slate-800">$</span>
+                        <input 
+                            type="number" 
+                            value={costoTotal} 
+                            onChange={(e) => setCostoTotal(Number(e.target.value))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-lg text-slate-800"
+                        />
+                    </div>
+                </div>
+                <div>
+                    <button 
+                        onClick={guardarFinanzas}
+                        disabled={guardandoCosto}
+                        className="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg font-bold transition-all"
+                    >
+                        {guardandoCosto ? 'Guardando...' : 'Guardar Costo'}
+                    </button>
+                </div>
+            </div>
             
+            {/* ALERTAS DINÁMICAS DE SALDO */}
+            {(costoTotal - (ticket.anticipo || 0)) > 0 && (
+                <div className="mt-4 bg-red-50 border border-red-200 p-4 rounded-lg flex items-center gap-4">
+                    <span className="text-3xl">⚠️</span>
+                    <div>
+                        <p className="text-sm font-bold text-red-800">Saldo Pendiente por Cobrar</p>
+                        <p className="text-2xl font-black text-red-600">${costoTotal - (ticket.anticipo || 0)}</p>
+                    </div>
+                </div>
+            )}
+            
+            {(costoTotal - (ticket.anticipo || 0)) <= 0 && costoTotal > 0 && (
+                <div className="mt-4 bg-green-50 border border-green-200 p-4 rounded-lg flex items-center gap-4">
+                    <span className="text-3xl">✅</span>
+                    <div>
+                        <p className="text-sm font-bold text-green-800">Equipo Liquidado</p>
+                        <p className="text-xs text-green-700">El anticipo cubre el costo total.</p>
+                    </div>
+                </div>
+            )}
+        </div>
             {/* Espacio reservado para las fotos de Flutter */}
             {/* SECCIÓN DE EVIDENCIA FOTOGRÁFICA */}
 {/* SECCIÓN DE EVIDENCIA FOTOGRÁFICA (GALERÍA MÚLTIPLE) */}

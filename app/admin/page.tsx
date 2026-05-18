@@ -116,6 +116,7 @@ export default function AdminDashboard() {
             ))}
           </div>
         </div>
+        
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
           <div className="bg-slate-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -185,6 +186,7 @@ export default function AdminDashboard() {
                         </button>
                       </td>
                     </tr>
+                    
                   ))}
                   
                   {/* ✨ MENSAJES DE ERROR / TABLA VACÍA */}
