@@ -7,8 +7,7 @@ export default function AdminDashboard() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-    // Agregamos { cache: 'no-store' } para obligar al navegador a siempre traer los datos frescos
+  useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets`, { cache: 'no-store' })
       .then(async (res) => {
         if (!res.ok) {
@@ -19,8 +18,14 @@ useEffect(() => {
         return res.json();
       })
       .then((data) => {
-        console.log("Datos frescos recibidos:", data); // Esto nos dirá qué está llegando
-        setTickets(data.tickets || []);
+        const listaTickets = data.tickets || [];
+        
+        // ORDENAR: Del más viejo al más nuevo (Fecha de creación ascendente)
+        const ticketsOrdenados = listaTickets.sort((a: any, b: any) => {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        });
+
+        setTickets(ticketsOrdenados);
         setLoading(false);
       })
       .catch((err) => {
@@ -28,12 +33,12 @@ useEffect(() => {
         setLoading(false);
       });
   }, []);
-  // Nuevo esquema de colores para los estados
+
   const colorEstado = (estado: string) => {
     switch (estado) {
       case 'RECIBIDO': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'DIAGNOSTICO': return 'bg-slate-800 text-white border-slate-900';
-      case 'ESPERANDO_PIEZA': return 'bg-red-100 text-red-700 border-red-200'; // Rojo para alertas
+      case 'ESPERANDO_PIEZA': return 'bg-red-100 text-red-700 border-red-200';
       case 'LISTO_PARA_ENTREGA': return 'bg-green-100 text-green-800 border-green-200';
       case 'ENTREGADO': return 'bg-gray-100 text-gray-500 border-gray-200';
       default: return 'bg-gray-100 text-gray-600 border-gray-200';
@@ -63,7 +68,7 @@ useEffect(() => {
           
           {/* Cabecera de la tabla */}
           <div className="bg-slate-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-slate-800">Equipos Activos</h2>
+            <h2 className="text-xl font-bold text-slate-800">Equipos Activos (Por orden de antigüedad)</h2>
             <div className="flex gap-2">
               <span className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                 <div className="w-3 h-3 rounded-full bg-blue-600"></div> En Proceso
@@ -82,6 +87,7 @@ useEffect(() => {
                 <thead>
                   <tr className="bg-white border-b border-gray-200 text-sm text-slate-400 uppercase tracking-wider font-bold">
                     <th className="p-5">Folio</th>
+                    <th className="p-5">Fechas</th>
                     <th className="p-5">Cliente</th>
                     <th className="p-5">Dispositivo</th>
                     <th className="p-5">Falla</th>
@@ -93,6 +99,22 @@ useEffect(() => {
                   {tickets.map((ticket: any) => (
                     <tr key={ticket.id} className="hover:bg-slate-50 transition-colors group">
                       <td className="p-5 font-black text-slate-800">#{ticket.folio || ticket.id.slice(0,4)}</td>
+                      
+                      {/* NUEVA COLUMNA DE FECHAS */}
+                      <td className="p-5 text-sm">
+                        <div className="text-slate-900 font-bold">
+                          📅 {new Date(ticket.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="text-slate-500 text-xs">
+                          🕒 {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        {ticket.fecha_promesa && (
+                          <div className="text-red-600 font-bold text-[11px] mt-1 bg-red-50 px-1.5 py-0.5 rounded inline-block border border-red-100">
+                            ⏱️ Promesa: {new Date(ticket.fecha_promesa).toLocaleDateString()}
+                          </div>
+                        )}
+                      </td>
+
                       <td className="p-5">
                         <p className="text-slate-900 font-bold">{ticket.clientes?.nombre || 'Sin nombre'}</p>
                         <p className="text-slate-500 text-sm">{ticket.clientes?.telefono}</p>
@@ -111,14 +133,14 @@ useEffect(() => {
                       </td>
                       <td className="p-5 text-right">
                         <button onClick={() => router.push(`/admin/ticket/${ticket.id}`)} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold opacity-0 group-hover:opacity-100 hover:bg-blue-600 transition-all">
-  Gestionar
-</button>
+                          Gestionar
+                        </button>
                       </td>
                     </tr>
                   ))}
                   {tickets.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-12 text-center text-slate-500 font-medium">
+                      <td colSpan={7} className="p-12 text-center text-slate-500 font-medium">
                         No hay equipos en la lista. Haz clic en "Recibir Equipo" para comenzar.
                       </td>
                     </tr>
