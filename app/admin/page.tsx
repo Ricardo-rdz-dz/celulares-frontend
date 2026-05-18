@@ -56,7 +56,7 @@ export default function AdminDashboard() {
     
     // 2. Validar el texto de búsqueda (ignorando mayúsculas/minúsculas)
     const termino = busqueda.toLowerCase();
-    const folio = (ticket.folio || ticket.id).toLowerCase();
+    const folio = String(ticket.folio || ticket.id).toLowerCase();
     const cliente = (ticket.clientes?.nombre || '').toLowerCase();
     const equipo = `${ticket.equipos?.marca || ''} ${ticket.equipos?.modelo || ''}`.toLowerCase();
 
