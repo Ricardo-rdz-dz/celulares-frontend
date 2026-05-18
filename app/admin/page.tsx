@@ -7,6 +7,10 @@ export default function AdminDashboard() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✨ NUEVOS ESTADOS PARA EL BUSCADOR Y FILTROS
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('TODOS');
+
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets`, { cache: 'no-store' })
       .then(async (res) => {
@@ -20,7 +24,7 @@ export default function AdminDashboard() {
       .then((data) => {
         const listaTickets = data.tickets || [];
         
-        // ORDENAR: Del más viejo al más nuevo (Fecha de creación ascendente)
+        // ORDENAR: Del más viejo al más nuevo
         const ticketsOrdenados = listaTickets.sort((a: any, b: any) => {
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         });
@@ -45,9 +49,24 @@ export default function AdminDashboard() {
     }
   };
 
+  // ✨ LÓGICA DE FILTRADO EN TIEMPO REAL
+  const ticketsFiltrados = tickets.filter((ticket: any) => {
+    // 1. Validar el Chip de Estado
+    const pasaFiltroEstado = filtroEstado === 'TODOS' || ticket.estado === filtroEstado;
+    
+    // 2. Validar el texto de búsqueda (ignorando mayúsculas/minúsculas)
+    const termino = busqueda.toLowerCase();
+    const folio = (ticket.folio || ticket.id).toLowerCase();
+    const cliente = (ticket.clientes?.nombre || '').toLowerCase();
+    const equipo = `${ticket.equipos?.marca || ''} ${ticket.equipos?.modelo || ''}`.toLowerCase();
+
+    const pasaBusqueda = folio.includes(termino) || cliente.includes(termino) || equipo.includes(termino);
+
+    return pasaFiltroEstado && pasaBusqueda;
+  });
+
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Barra Superior Oscura */}
       <header className="bg-slate-900 text-white border-b-4 border-red-600 shadow-md">
         <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
           <div>
@@ -64,19 +83,43 @@ export default function AdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+        
+        {/* ✨ BARRA DE BÚSQUEDA Y FILTROS CHIPS */}
+        <div className="mb-6 flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
           
-          {/* Cabecera de la tabla */}
+          {/* Buscador de Texto */}
+          <div className="relative w-full md:w-1/3">
+            <span className="absolute left-3 top-3 text-gray-400">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Buscar por cliente, folio o modelo..." 
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            />
+          </div>
+
+          {/* Chips de Estados */}
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+            {['TODOS', 'RECIBIDO', 'DIAGNOSTICO', 'ESPERANDO_PIEZA', 'LISTO_PARA_ENTREGA'].map((estado) => (
+              <button
+                key={estado}
+                onClick={() => setFiltroEstado(estado)}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                  filtroEstado === estado 
+                    ? 'bg-slate-800 text-white border-slate-900 shadow-md' 
+                    : 'bg-white text-slate-600 border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                {estado.replace(/_/g, ' ')}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
           <div className="bg-slate-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-xl font-bold text-slate-800">Equipos Activos (Por orden de antigüedad)</h2>
-            <div className="flex gap-2">
-              <span className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                <div className="w-3 h-3 rounded-full bg-blue-600"></div> En Proceso
-              </span>
-              <span className="flex items-center gap-2 text-sm font-semibold text-slate-600 ml-4">
-                <div className="w-3 h-3 rounded-full bg-red-600"></div> Detenido
-              </span>
-            </div>
           </div>
 
           {loading ? (
@@ -96,21 +139,26 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {tickets.map((ticket: any) => (
+                  {/* ✨ AQUÍ USAMOS ticketsFiltrados EN LUGAR DE tickets */}
+                  {ticketsFiltrados.map((ticket: any) => (
                     <tr key={ticket.id} className="hover:bg-slate-50 transition-colors group">
                       <td className="p-5 font-black text-slate-800">#{ticket.folio || ticket.id.slice(0,4)}</td>
                       
-                      {/* NUEVA COLUMNA DE FECHAS */}
                       <td className="p-5 text-sm">
-                        <div className="text-slate-900 font-bold">
-                           {new Date(ticket.created_at).toLocaleDateString()}
+                        <div className="text-slate-900 font-bold" title="Fecha de recepción">
+                          📥 {new Date(ticket.created_at).toLocaleDateString()}
                         </div>
-                        <div className="text-slate-500 text-xs">
-                           {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <div className="text-slate-500 text-xs mb-2">
+                          🕒 {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                         {ticket.fecha_promesa && (
-                          <div className="text-red-600 font-bold text-[11px] mt-1 bg-red-50 px-1.5 py-0.5 rounded inline-block border border-red-100">
-                             Promesa: {new Date(ticket.fecha_promesa).toLocaleDateString()}
+                          <div className="text-amber-600 font-bold text-[11px] mt-1 bg-amber-50 px-1.5 py-0.5 rounded inline-block border border-amber-200" title="Fecha prometida al cliente">
+                            ⏱️ Promesa: {new Date(ticket.fecha_promesa).toLocaleDateString()}
+                          </div>
+                        )}
+                        {ticket.fecha_entrega && (
+                          <div className="text-green-600 font-bold text-[11px] mt-1 bg-green-50 px-1.5 py-0.5 rounded inline-block border border-green-200 block" title="Fecha real de entrega">
+                            ✅ Entregado: {new Date(ticket.fecha_entrega).toLocaleDateString()}
                           </div>
                         )}
                       </td>
@@ -138,10 +186,19 @@ export default function AdminDashboard() {
                       </td>
                     </tr>
                   ))}
+                  
+                  {/* ✨ MENSAJES DE ERROR / TABLA VACÍA */}
                   {tickets.length === 0 && (
                     <tr>
                       <td colSpan={7} className="p-12 text-center text-slate-500 font-medium">
                         No hay equipos en la lista. Haz clic en "Recibir Equipo" para comenzar.
+                      </td>
+                    </tr>
+                  )}
+                  {tickets.length > 0 && ticketsFiltrados.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="p-12 text-center text-slate-500 font-medium">
+                        No se encontraron coincidencias para la búsqueda o el filtro seleccionado.
                       </td>
                     </tr>
                   )}
