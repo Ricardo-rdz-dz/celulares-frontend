@@ -30,7 +30,7 @@ export default function TicketDetail() {
     // Si la página tiene un estado de "Cargando", puedes activarlo aquí
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets/${ticket.id}/estado`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
