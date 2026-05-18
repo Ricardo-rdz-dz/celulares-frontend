@@ -34,7 +34,7 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
     <div className="p-4 max-w-sm mx-auto text-black bg-white font-mono text-sm">
       
       {/* ENCABEZADO */}
-      <h1 className="text-xl font-bold text-center mb-1 uppercase">Mi Taller de Reparación</h1>
+      <h1 className="text-xl font-bold text-center mb-1 uppercase">MovilPlace</h1>
       <p className="text-center text-[10px] mb-2 uppercase">Centro de Soluciones Móviles</p>
       <p className="text-center font-bold border-b border-t border-black border-dashed py-1 mb-4">
         TICKET DE RECEPCIÓN
@@ -79,7 +79,7 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
         
         {/* 1. ENCUESTA DE SERVICIO */}
         <div className="p-2 border border-black border-dashed rounded-lg text-center bg-gray-50 flex flex-col items-center">
-          <p className="font-bold text-[12px] mb-1">📝 ENCUESTA DE SERVICIO</p>
+          <p className="font-bold text-[12px] mb-1"> ENCUESTA DE SERVICIO</p>
           <p className="text-[10px] mb-2 leading-tight">Escanea y cuéntanos qué te pareció nuestro servicio:</p>
           <img 
             src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" 
@@ -92,7 +92,7 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
         {/* 2. VALORACIÓN DE GOOGLE */}
         <div className="p-2 border border-black border-dashed rounded-lg text-center bg-gray-50 flex flex-col items-center">
           <p className="font-bold text-[12px] mb-1">⭐⭐⭐⭐⭐ CALIFÍCANOS</p>
-          <p className="text-[10px] mb-2 leading-tight">¿Satisfecho con tu reparación? Apóyanos en Google:</p>
+          <p className="text-[10px] mb-2 leading-tight">¿Satisfecho con tu reparación? Apóyanos con una reseña en Google:</p>
           
           {/* Reemplaza TU_ENLACE_DE_GOOGLE aquí 👇 */}
           <img 
