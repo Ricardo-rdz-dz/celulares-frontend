@@ -60,6 +60,37 @@ export default function TicketDetail() {
     }
     setGuardandoCosto(false);
   };
+  // Función mágica para liquidar el equipo en 1 clic
+  const liquidarSaldo = async () => {
+    const saldo = costoTotal - (ticket?.anticipo || 0);
+    const confirmar = window.confirm(`¿Confirmas que el cliente acaba de pagar los $${saldo} restantes?`);
+    if (!confirmar) return;
+
+    setGuardandoCosto(true);
+    try {
+      // Le enviamos al backend que el anticipo (dinero recibido) ahora es igual al costo total
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets/${ticket.id}/finanzas`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          costo_total: costoTotal, 
+          saldo_restante: 0, 
+          anticipo: costoTotal 
+        })
+      });
+      
+      if(res.ok) {
+        alert('✅ Pago registrado. El equipo está liquidado.');
+        // Actualizamos la pantalla instantáneamente
+        setTicket({...ticket, anticipo: costoTotal, saldo_restante: 0});
+      } else {
+        alert('❌ Error al registrar el pago');
+      }
+    } catch(e) {
+      console.error('Error al liquidar:', e);
+    }
+    setGuardandoCosto(false);
+  };
 
 // Función para cambiar el estado
   const cambiarEstado = async (nuevoEstado: string) => {
@@ -290,12 +321,21 @@ export default function TicketDetail() {
             
             {/* ALERTAS DINÁMICAS DE SALDO */}
             {(costoTotal - (ticket.anticipo || 0)) > 0 && (
-                <div className="mt-4 bg-red-50 border border-red-200 p-4 rounded-lg flex items-center gap-4">
-                    <span className="text-3xl">⚠️</span>
-                    <div>
-                        <p className="text-sm font-bold text-red-800">Saldo Pendiente por Cobrar</p>
-                        <p className="text-2xl font-black text-red-600">${costoTotal - (ticket.anticipo || 0)}</p>
+                <div className="mt-4 bg-red-50 border border-red-200 p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <span className="text-3xl">⚠️</span>
+                        <div>
+                            <p className="text-sm font-bold text-red-800">Saldo Pendiente por Cobrar</p>
+                            <p className="text-2xl font-black text-red-600">${costoTotal - (ticket.anticipo || 0)}</p>
+                        </div>
                     </div>
+                    <button 
+                        onClick={liquidarSaldo}
+                        disabled={guardandoCosto}
+                        className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold shadow-md transition-all whitespace-nowrap flex items-center gap-2"
+                    >
+                        <span>💵</span> Registrar Pago Final
+                    </button>
                 </div>
             )}
             
