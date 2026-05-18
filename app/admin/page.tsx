@@ -103,14 +103,14 @@ export default function AdminDashboard() {
                       {/* NUEVA COLUMNA DE FECHAS */}
                       <td className="p-5 text-sm">
                         <div className="text-slate-900 font-bold">
-                          📅 {new Date(ticket.created_at).toLocaleDateString()}
+                           {new Date(ticket.created_at).toLocaleDateString()}
                         </div>
                         <div className="text-slate-500 text-xs">
-                          🕒 {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                           {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                         {ticket.fecha_promesa && (
                           <div className="text-red-600 font-bold text-[11px] mt-1 bg-red-50 px-1.5 py-0.5 rounded inline-block border border-red-100">
-                            ⏱️ Promesa: {new Date(ticket.fecha_promesa).toLocaleDateString()}
+                             Promesa: {new Date(ticket.fecha_promesa).toLocaleDateString()}
                           </div>
                         )}
                       </td>
