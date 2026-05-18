@@ -74,24 +74,39 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
         <p>• Es obligatorio presentar este ticket para cualquier trámite.</p>
       </div>
 
-     {/* ENCUESTA DE SERVICIO */}
-      <div className="my-6 p-2 border border-black border-dashed rounded-lg text-center bg-gray-50 flex flex-col items-center">
-        <p className="font-bold text-[12px] mb-1">⭐ ENCUESTA DE SERVICIO ⭐</p>
-        <p className="text-[11px] mb-2">Escanea el código y cuéntanos qué te pareció nuestro servicio:</p>
+    {/* --- SECCIÓN DE CÓDIGOS QR --- */}
+      <div className="my-6 space-y-3">
         
-        {/* Generador automático de QR */}
-        <img 
-          src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" 
-          alt="QR Encuesta" 
-          className="w-20 h-20 mt-1 mb-2"
-        />
-        
-        <p className="text-[9px] text-gray-500">¡Tu opinión nos ayuda a mejorar!</p>
+        {/* 1. ENCUESTA DE SERVICIO */}
+        <div className="p-2 border border-black border-dashed rounded-lg text-center bg-gray-50 flex flex-col items-center">
+          <p className="font-bold text-[12px] mb-1">📝 ENCUESTA DE SERVICIO</p>
+          <p className="text-[10px] mb-2 leading-tight">Escanea y cuéntanos qué te pareció nuestro servicio:</p>
+          <img 
+            src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" 
+            alt="QR Encuesta" 
+            className="w-20 h-20 mt-1 mb-2"
+          />
+          <p className="text-[9px] text-gray-500">¡Tu opinión nos ayuda a mejorar!</p>
+        </div>
+
+        {/* 2. VALORACIÓN DE GOOGLE */}
+        <div className="p-2 border border-black border-dashed rounded-lg text-center bg-gray-50 flex flex-col items-center">
+          <p className="font-bold text-[12px] mb-1">⭐⭐⭐⭐⭐ CALIFÍCANOS</p>
+          <p className="text-[10px] mb-2 leading-tight">¿Satisfecho con tu reparación? Apóyanos en Google:</p>
+          
+          {/* Reemplaza TU_ENLACE_DE_GOOGLE aquí 👇 */}
+          <img 
+            src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/Cz6SupwJpqQemdAY7" 
+            alt="QR Google Maps" 
+            className="w-20 h-20 mt-1 mb-2"
+          />
+          <p className="text-[9px] text-gray-500">¡Nos ayuda muchísimo a crecer!</p>
+        </div>
+
       </div>
 
-      <p className="text-center font-bold mt-4 uppercase">¡Gracias por tu confianza!</p>
-      <p className="text-center text-[9px] mt-1">Visítanos pronto</p>
-
+      <p className="text-center font-bold mt-4 uppercase text-[13px]">¡Gracias por tu confianza!</p>
+      <p className="text-center text-[10px] mt-1">Visítanos pronto</p>
     </div>
   );
 }
