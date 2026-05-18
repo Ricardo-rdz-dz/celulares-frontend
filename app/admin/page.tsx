@@ -101,7 +101,7 @@ export default function AdminDashboard() {
 
           {/* Chips de Estados */}
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            {['TODOS', 'RECIBIDO', 'DIAGNOSTICO', 'ESPERANDO_PIEZA', 'LISTO_PARA_ENTREGA'].map((estado) => (
+            {['TODOS', 'RECIBIDO', 'DIAGNOSTICO', 'ESPERANDO_PIEZA', 'ENTREGADO'].map((estado) => (
               <button
                 key={estado}
                 onClick={() => setFiltroEstado(estado)}
@@ -146,14 +146,14 @@ export default function AdminDashboard() {
                       
                       <td className="p-5 text-sm">
                         <div className="text-slate-900 font-bold" title="Fecha de recepción">
-                          📥 {new Date(ticket.created_at).toLocaleDateString()}
+                           {new Date(ticket.created_at).toLocaleDateString()}
                         </div>
                         <div className="text-slate-500 text-xs mb-2">
-                          🕒 {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                           {new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                         {ticket.fecha_promesa && (
                           <div className="text-amber-600 font-bold text-[11px] mt-1 bg-amber-50 px-1.5 py-0.5 rounded inline-block border border-amber-200" title="Fecha prometida al cliente">
-                            ⏱️ Promesa: {new Date(ticket.fecha_promesa).toLocaleDateString()}
+                             Promesa: {new Date(ticket.fecha_promesa).toLocaleDateString()}
                           </div>
                         )}
                         {ticket.fecha_entrega && (
