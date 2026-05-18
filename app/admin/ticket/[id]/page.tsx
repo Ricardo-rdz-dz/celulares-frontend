@@ -145,6 +145,14 @@ export default function TicketDetail() {
 
                 
    <div className="flex gap-2">
+    {/* Botón Gris: Imprimir Ticket / Recibo */}
+  <button 
+    onClick={() => window.print()} 
+    className="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-all flex items-center gap-2"
+    title="Imprimir recibo térmico"
+  >
+    <span>🖨️</span> Imprimir Recibo
+  </button>
   {/* Botón Azul: Notificación de estatus normal */}
   <button 
     onClick={abrirWhatsApp}
