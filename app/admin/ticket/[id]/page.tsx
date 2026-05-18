@@ -147,7 +147,7 @@ export default function TicketDetail() {
    <div className="flex gap-2">
     {/* Botón Gris: Imprimir Ticket / Recibo */}
   <button 
-    onClick={() => window.print()} 
+    onClick={() => window.open(`/admin/ticket/${ticket.id}/print`, '_blank')}
     className="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-all flex items-center gap-2"
     title="Imprimir recibo térmico"
   >
