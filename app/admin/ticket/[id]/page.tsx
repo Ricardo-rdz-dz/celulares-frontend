@@ -51,7 +51,8 @@ export default function TicketDetail() {
   };
   // Función para abrir WhatsApp con un mensaje predeterminado
 // Función para abrir WhatsApp con un mensaje predeterminado
- const abrirWhatsApp = () => {
+ // 1. TU FUNCIÓN ORIGINAL: Para enviar el estatus actual del equipo
+  const abrirWhatsApp = () => {
     try {
       const telefono = ticket.clientes?.telefono;
       if (!telefono) {
@@ -59,44 +60,57 @@ export default function TicketDetail() {
         return;
       }
 
-      // 1. FORZAMOS a que el teléfono sea un Texto antes de limpiarlo
       const telefonoStr = String(telefono);
       const numeroLimpio = telefonoStr.replace(/\D/g, '');
-      
-      // Asumimos código de México (+52)
       const numeroConCodigo = numeroLimpio.startsWith('52') ? numeroLimpio : `52${numeroLimpio}`;
 
-      // 2. Protegemos las variables por si alguna viene vacía
       const marca = ticket.equipos?.marca || 'equipo';
       const modelo = ticket.equipos?.modelo || '';
-      const estadoActual = String(ticket.estado || '');
+      const estadoActual = String(ticket.estado || '').replace(/_/g, ' ');
       
-      // 3. 🎯 DINÁMICO: Armamos el mensaje dependiendo del estado
-      let mensaje = '';
-      
-      if (estadoActual === 'ENTREGADO') {
-        // Mensaje especial de reseña + encuesta si ya se entregó
-        mensaje = `¡Hola ${ticket.clientes?.nombre}! 👋\n\nNos da mucho gusto haberte entregado tu ${marca} ${modelo} al 100% 📱✨\n\nPara nosotros es súper importante tu opinión. ¿Nos regalarías 1 minuto para calificarnos con 5 estrellas en Google? ⭐️⭐️⭐️⭐️⭐️\n\nNos ayuda muchísimo a crecer:\n👉 https://maps.app.goo.gl/Cz6SupwJpqQemdAY7\n\nY si quieres dejas sugerencias, aquí está nuestra encuesta rápida:\n👉 https://forms.gle/TdJQcXYvyqJias5p6\n\n¡Gracias por confiar en MovilPlace!`;
-      } else {
-        // Mensaje estándar para cualquier otro estado (RECIBIDO, DIAGNOSTICO, etc.)
-        const estadoFormateado = estadoActual.replace(/_/g, ' ');
-        mensaje = `Hola ${ticket.clientes?.nombre}, te informamos desde MovilPlace que tu dispositivo ${marca} ${modelo} se encuentra en estado: ${estadoFormateado}.`;
-      }
+      const mensaje = `Hola ${ticket.clientes?.nombre}, te informamos desde MovilPlace que tu dispositivo ${marca} ${modelo} se encuentra en estado: ${estadoActual}.`;
       
       const url = `https://wa.me/${numeroConCodigo}?text=${encodeURIComponent(mensaje)}`;
       
-      // 4. Intentamos abrir en pestaña nueva. Si el navegador lo bloquea, lo abrimos en la misma pestaña.
       const nuevaPestana = window.open(url, '_blank');
       if (!nuevaPestana) {
         window.location.href = url;
       }
-      
     } catch (error) {
       console.error("Error al abrir WhatsApp:", error);
-      alert('Hubo un error al intentar abrir WhatsApp. Revisa la consola.');
+      alert('Hubo un error al intentar abrir WhatsApp.');
     }
   };
 
+  // 2. NUEVA FUNCIÓN: Exclusiva para pedir la reseña de Google y Encuesta
+  const abrirWhatsAppResena = () => {
+    try {
+      const telefono = ticket.clientes?.telefono;
+      if (!telefono) {
+        alert('Este cliente no tiene un teléfono registrado.');
+        return;
+      }
+
+      const telefonoStr = String(telefono);
+      const numeroLimpio = telefonoStr.replace(/\D/g, '');
+      const numeroConCodigo = numeroLimpio.startsWith('52') ? numeroLimpio : `52${numeroLimpio}`;
+
+      const marca = ticket.equipos?.marca || 'equipo';
+      const modelo = ticket.equipos?.modelo || '';
+
+      const mensaje = `¡Hola ${ticket.clientes?.nombre}! 👋\n\nNos da mucho gusto haberte entregado tu ${marca} ${modelo} al 100% 📱✨\n\nPara nosotros es súper importante tu opinión. ¿Nos regalarías 1 minuto para calificarnos con 5 estrellas en Google? ⭐️⭐️⭐️⭐️⭐️\n\nNos ayuda muchísimo a crecer:\n👉 https://maps.app.goo.gl/Cz6SupwJpqQemdAY7\n\nY si quieres dejarnos sugerencias, aquí está nuestra encuesta rápida:\n👉 https://forms.gle/TdJQcXYvyqJias5p6\n\n¡Gracias por confiar en MovilPlace!`;
+      
+      const url = `https://wa.me/${numeroConCodigo}?text=${encodeURIComponent(mensaje)}`;
+      
+      const nuevaPestana = window.open(url, '_blank');
+      if (!nuevaPestana) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Error al abrir WhatsApp de reseña:", error);
+      alert('Hubo un error al intentar abrir WhatsApp.');
+    }
+  };
   if (loading) return <div className="p-10 text-center text-slate-500">Cargando detalles...</div>;
   if (!ticket) return <div className="p-10 text-center text-red-500">No se encontró el ticket.</div>;
 
@@ -135,13 +149,27 @@ export default function TicketDetail() {
 >
   Abrir WhatsApp
 </button>
+   <div className="flex gap-2">
+  {/* Botón Azul: Notificación de estatus normal */}
+  <button 
+    onClick={abrirWhatsApp}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-all flex items-center gap-2"
+    title="Enviar estatus actual al cliente"
+  >
+    <span>💬</span> Mandar Estatus
+  </button>
+
+  {/* Botón Verde: Solo para cuando el estado sea ENTREGADO */}
+  {ticket.estado === 'ENTREGADO' && (
     <button 
-  type="button"
-  onClick={() => window.open(`/admin/ticket/${ticket.id}/print`, '_blank')}
-  className="bg-gray-800 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-900 transition shadow-sm"
->
-   Imprimir Recibo
-</button>
+      onClick={abrirWhatsAppResena}
+      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-all flex items-center gap-2 animate-bounce"
+      title="Pedir reseña de Google de 5 estrellas"
+    >
+      <span>⭐</span> Pedir Reseña
+    </button>
+  )}
+</div>
               </div>
           
             </div>
