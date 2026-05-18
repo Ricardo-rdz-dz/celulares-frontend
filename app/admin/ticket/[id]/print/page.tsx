@@ -74,12 +74,19 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
         <p>• Es obligatorio presentar este ticket para cualquier trámite.</p>
       </div>
 
-      {/* ENCUESTA DE SERVICIO */}
-      <div className="my-6 p-2 border border-black border-dashed rounded-lg text-center bg-gray-50">
-        <p className="font-bold text-[12px] mb-1">ENCUESTA DE SERVICIO ⭐</p>
-        <p className="text-[11px] mb-2">¿Qué te pareció nuestro servicio?</p>
-        <p className="text-[10px] font-bold underline">INGRESA A ESTE FORMULARIO:</p>
-        <p className="text-[10px] break-all mt-1">https://tuform.link/taller-encuesta</p>
+     {/* ENCUESTA DE SERVICIO */}
+      <div className="my-6 p-2 border border-black border-dashed rounded-lg text-center bg-gray-50 flex flex-col items-center">
+        <p className="font-bold text-[12px] mb-1">⭐ ENCUESTA DE SERVICIO ⭐</p>
+        <p className="text-[11px] mb-2">Escanea el código y cuéntanos qué te pareció nuestro servicio:</p>
+        
+        {/* Generador automático de QR */}
+        <img 
+          src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" 
+          alt="QR Encuesta" 
+          className="w-20 h-20 mt-1 mb-2"
+        />
+        
+        <p className="text-[9px] text-gray-500">¡Tu opinión nos ayuda a mejorar!</p>
       </div>
 
       <p className="text-center font-bold mt-4 uppercase">¡Gracias por tu confianza!</p>
