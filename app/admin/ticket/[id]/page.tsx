@@ -76,7 +76,7 @@ export default function TicketDetail() {
       
       if (estadoActual === 'ENTREGADO') {
         // Mensaje especial de reseña + encuesta si ya se entregó
-        mensaje = `¡Hola ${ticket.clientes?.nombre}! 👋\n\nNos da mucho gusto haberte entregado tu ${marca} ${modelo} al 100% 📱✨\n\nPara nosotros es súper importante tu opinión. ¿Nos regalarías 1 minuto para calificarnos con 5 estrellas en Google? ⭐️⭐️⭐️⭐️⭐️\n\nNos ayuda muchísimo a crecer:\n👉 TU_ENLACE_DE_GOOGLE\n\nY si quieres dejas sugerencias, aquí está nuestra encuesta rápida:\n👉 https://forms.gle/TdJQcXYvyqJias5p6\n\n¡Gracias por confiar en MovilPlace!`;
+        mensaje = `¡Hola ${ticket.clientes?.nombre}! 👋\n\nNos da mucho gusto haberte entregado tu ${marca} ${modelo} al 100% 📱✨\n\nPara nosotros es súper importante tu opinión. ¿Nos regalarías 1 minuto para calificarnos con 5 estrellas en Google? ⭐️⭐️⭐️⭐️⭐️\n\nNos ayuda muchísimo a crecer:\n👉 https://maps.app.goo.gl/Cz6SupwJpqQemdAY7\n\nY si quieres dejas sugerencias, aquí está nuestra encuesta rápida:\n👉 https://forms.gle/TdJQcXYvyqJias5p6\n\n¡Gracias por confiar en MovilPlace!`;
       } else {
         // Mensaje estándar para cualquier otro estado (RECIBIDO, DIAGNOSTICO, etc.)
         const estadoFormateado = estadoActual.replace(/_/g, ' ');
