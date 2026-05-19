@@ -85,7 +85,7 @@ export default function AdminDashboard() {
               className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm"
               title="Configurar catálogo de precios del cotizador"
             >
-              <span>⚙️</span> Configurar Precios
+              <span>⚙️</span> Agregar precios para cotizador
             </button>
         </div>
       </header>
