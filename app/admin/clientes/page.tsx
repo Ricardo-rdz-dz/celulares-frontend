@@ -23,28 +23,33 @@ export default function CRMClientes() {
   }, []);
 
   // Función constructora de mensajes rápidos
-  const enviarPromoWhatsApp = (cliente: any, tipoPromo: string) => {
-    let telefonoLimpio = String(cliente.telefono).replace(/\D/g, '');
-    const numeroConCodigo = telefonoLimpio.startsWith('52') ? telefonoLimpio : `52${telefonoLimpio}`;
+  // ✨ NUEVA FUNCIÓN: Carga la plantilla en el cuadro de texto en lugar de enviarla directo
+  const cargarPlantilla = (tipoPromo: string) => {
+    if (!clienteSeleccionado) return;
+    
     let mensaje = '';
-    const primerEquipo = cliente.historial[0]?.equipos?.marca || 'dispositivo';
+    const primerEquipo = clienteSeleccionado.historial[0]?.equipos?.marca || 'dispositivo';
 
-switch (tipoPromo) {
+    switch (tipoPromo) {
       case 'SMARTWATCH':
-        mensaje = `¡Hola ${cliente.nombre}! 👋 Soy de MovilPlace, donde reparamos tu ${primerEquipo}.\n\nComo eres cliente preferencial, te escribo para darte un acceso exclusivo: nos acaban de llegar nuevos Smartwatches ⌚️.\n\nPrecio normal: $1,000\n🔥 *Tu precio especial: $600*\n\nEstán volando, ¿te separo uno?\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
+        mensaje = `¡Hola ${clienteSeleccionado.nombre}! 👋 Soy de MovilPlace, donde reparamos tu ${primerEquipo}.\n\nComo eres cliente preferencial, te escribo para darte un acceso exclusivo: nos acaban de llegar nuevos Smartwatches ⌚️.\n\nPrecio normal: $1,000\n🔥 *Tu precio especial: $600*\n\nEstán volando, ¿te separo uno?`;
         break;
       case 'DESCUENTO_REPARACION':
-        mensaje = `¡Hola ${cliente.nombre}! 👋 En MovilPlace valoramos mucho tu preferencia.\n\nTe regalamos un cupón del *15% de descuento* en tu próxima reparación o en la compra de cualquier accesorio válido por todo este mes. 🎟️\n\n¿Tienes algún equipo que necesite mantenimiento?\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
+        mensaje = `¡Hola ${clienteSeleccionado.nombre}! 👋 En MovilPlace valoramos mucho tu preferencia.\n\nTe regalamos un cupón del *15% de descuento* en tu próxima reparación o en la compra de cualquier accesorio válido por todo este mes. 🎟️\n\n¿Tienes algún equipo que necesite mantenimiento?`;
         break;
       case 'NUEVO_INVENTARIO':
-        mensaje = `¡Hola ${cliente.nombre}! 👋 Te saludamos de MovilPlace.\n\nSolo queríamos avisarte que nos acaba de llegar nuevo inventario de celulares y accesorios a súper precios 📱✨.\n\nSi estabas pensando en renovar equipo, avísame y te mando el catálogo sin compromiso.\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
+        mensaje = `¡Hola ${clienteSeleccionado.nombre}! 👋 Te saludamos de MovilPlace.\n\nSolo queríamos avisarte que nos acaba de llegar nuevo inventario de celulares y accesorios a súper precios 📱✨.\n\nSi estabas pensando en renovar equipo, avísame y te mando el catálogo sin compromiso.`;
         break;
       default:
-        mensaje = `¡Hola ${cliente.nombre}! 👋 Te saludamos de MovilPlace...\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
+        mensaje = `¡Hola ${clienteSeleccionado.nombre}! 👋 Te saludamos de MovilPlace...`;
     }
 
-    const url = `https://wa.me/${numeroConCodigo}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
+    // Le sumamos la leyenda anti-spam y lo mandamos al cuadro de texto
+    const leyendaAntiSpam = `\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
+    setMensajePersonalizado(mensaje + leyendaAntiSpam);
+    
+    // Pequeño scroll automático hacia el cuadro de texto para mejor UX (opcional pero se ve muy pro)
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
 
   // ✨ FUNCIÓN PARA CONECTAR AL MOTOR DE IA EN TU BACKEND
@@ -155,26 +160,37 @@ switch (tipoPromo) {
             <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">Acciones Comerciales</h3>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'SMARTWATCH')} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left">
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button 
+                  onClick={() => cargarPlantilla('SMARTWATCH')} 
+                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                >
                   <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">⌚️</div>
                   <div>
                     <h4 className="font-semibold text-slate-800 text-sm">Smartwatch</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Precio preferencial</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Cargar plantilla</p>
                   </div>
                 </button>
-                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'DESCUENTO_REPARACION')} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left">
+                
+                <button 
+                  onClick={() => cargarPlantilla('DESCUENTO_REPARACION')} 
+                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                >
                   <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">🎟️</div>
                   <div>
                     <h4 className="font-semibold text-slate-800 text-sm">Cupón 15%</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Próxima reparación</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Cargar plantilla</p>
                   </div>
                 </button>
-                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'NUEVO_INVENTARIO')} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left">
+                
+                <button 
+                  onClick={() => cargarPlantilla('NUEVO_INVENTARIO')} 
+                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                >
                   <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">📱</div>
                   <div>
                     <h4 className="font-semibold text-slate-800 text-sm">Catálogo</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Equipos nuevos</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Cargar plantilla</p>
                   </div>
                 </button>
               </div>
