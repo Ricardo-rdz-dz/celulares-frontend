@@ -8,6 +8,10 @@ export default function CRMClientes() {
   const [loading, setLoading] = useState(true);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<any>(null);
 
+  // ✨ NUEVOS ESTADOS PARA EL REDACTOR
+  const [mensajePersonalizado, setMensajePersonalizado] = useState('');
+  const [mejorandoConIA, setMejorandoConIA] = useState(false);
+
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/crm`, { cache: 'no-store' })
       .then((res) => res.json())
@@ -18,11 +22,10 @@ export default function CRMClientes() {
       .catch((err) => console.error(err));
   }, []);
 
-  // Función constructora de mensajes de WhatsApp (Lógica intacta)
+  // Función constructora de mensajes rápidos
   const enviarPromoWhatsApp = (cliente: any, tipoPromo: string) => {
     let telefonoLimpio = String(cliente.telefono).replace(/\D/g, '');
     const numeroConCodigo = telefonoLimpio.startsWith('52') ? telefonoLimpio : `52${telefonoLimpio}`;
-    
     let mensaje = '';
     const primerEquipo = cliente.historial[0]?.equipos?.marca || 'dispositivo';
 
@@ -44,12 +47,49 @@ export default function CRMClientes() {
     window.open(url, '_blank');
   };
 
+  // ✨ FUNCIÓN PARA CONECTAR AL MOTOR DE IA EN TU BACKEND
+  const mejorarMensajeIA = async () => {
+    setMejorandoConIA(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/mejorar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          mensaje: mensajePersonalizado, 
+          cliente: clienteSeleccionado.nombre 
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMensajePersonalizado(data.mensajeMejorado);
+      } else {
+        alert('❌ Hubo un error de conexión con el servidor.');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setMejorandoConIA(false);
+  };
+
+  // ✨ FUNCIÓN PARA ENVIAR EL TEXTO PERSONALIZADO
+  const enviarMensajeLibre = () => {
+    if (!clienteSeleccionado || !mensajePersonalizado) return;
+    let telefonoLimpio = String(clienteSeleccionado.telefono).replace(/\D/g, '');
+    const numeroConCodigo = telefonoLimpio.startsWith('52') ? telefonoLimpio : `52${telefonoLimpio}`;
+    const url = `https://wa.me/${numeroConCodigo}?text=${encodeURIComponent(mensajePersonalizado)}`;
+    window.open(url, '_blank');
+  };
+
+  // Cada que cambies de cliente, limpiamos el cuadro de texto
+  useEffect(() => {
+    setMensajePersonalizado('');
+  }, [clienteSeleccionado]);
+
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col md:flex-row font-sans text-slate-800">
       
       {/* PANEL IZQUIERDO: LISTA DE CLIENTES */}
       <div className="w-full md:w-1/3 bg-white border-r border-slate-200 h-screen overflow-y-auto flex flex-col">
-        {/* Cabecera del panel izquierdo minimalista */}
         <div className="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 flex justify-between items-center z-10">
           <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Directorio de Clientes</h2>
           <button 
@@ -78,7 +118,6 @@ export default function CRMClientes() {
                   {cliente.nombre}
                 </h3>
                 <p className="text-xs text-slate-500 font-mono mt-1">{cliente.telefono}</p>
-                
                 <div className="flex gap-2 items-center mt-3">
                   <span className="text-[10px] font-semibold border border-slate-200 text-slate-500 px-2 py-0.5 rounded-md">
                     {cliente.historial?.length} tickets
@@ -98,7 +137,6 @@ export default function CRMClientes() {
         {clienteSeleccionado ? (
           <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
             
-            {/* CABECERA DEL CLIENTE */}
             <div className="bg-white px-8 py-6 rounded-xl border border-slate-200 shadow-sm flex justify-between items-end">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{clienteSeleccionado.nombre}</h2>
@@ -110,59 +148,69 @@ export default function CRMClientes() {
               </div>
             </div>
 
-            {/* BOTONES DE MARKETING Y VENTAS (DISEÑO CLEAN/SAAS) */}
             <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">Acciones Comerciales</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                
-                {/* Botón 1 */}
-                <button 
-                  onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'SMARTWATCH')} 
-                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
-                >
+                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'SMARTWATCH')} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left">
                   <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">⌚️</div>
                   <div>
                     <h4 className="font-semibold text-slate-800 text-sm">Smartwatch</h4>
                     <p className="text-[11px] text-slate-500 mt-0.5">Precio preferencial</p>
                   </div>
                 </button>
-
-                {/* Botón 2 */}
-                <button 
-                  onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'DESCUENTO_REPARACION')} 
-                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
-                >
+                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'DESCUENTO_REPARACION')} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left">
                   <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">🎟️</div>
                   <div>
                     <h4 className="font-semibold text-slate-800 text-sm">Cupón 15%</h4>
                     <p className="text-[11px] text-slate-500 mt-0.5">Próxima reparación</p>
                   </div>
                 </button>
-
-                {/* Botón 3 */}
-                <button 
-                  onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'NUEVO_INVENTARIO')} 
-                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
-                >
+                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'NUEVO_INVENTARIO')} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left">
                   <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">📱</div>
                   <div>
                     <h4 className="font-semibold text-slate-800 text-sm">Catálogo</h4>
                     <p className="text-[11px] text-slate-500 mt-0.5">Equipos nuevos</p>
                   </div>
                 </button>
-
               </div>
+
+              {/* ✨ NUEVO: REDACTOR PERSONALIZADO */}
+              <div className="mt-8 border-t border-slate-200 pt-6">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Asistente de Redacción Integrado</h3>
+                <textarea
+                  value={mensajePersonalizado}
+                  onChange={(e) => setMensajePersonalizado(e.target.value)}
+                  placeholder="Ej. Nos acaba de llegar el Motorola RAZR 2024 y el OnePlus 13R a un excelente precio..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700 outline-none focus:border-slate-400 focus:bg-white transition-all h-28 resize-none"
+                ></textarea>
+                
+                <div className="flex gap-3 mt-3">
+                  <button
+                    onClick={mejorarMensajeIA}
+                    disabled={mejorandoConIA || !mensajePersonalizado}
+                    className="flex-1 bg-white border border-slate-200 text-slate-700 font-semibold text-sm py-2.5 rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <span>✨</span> {mejorandoConIA ? 'Generando estructura...' : 'Mejorar Estructura'}
+                  </button>
+                  <button
+                    onClick={enviarMensajeLibre}
+                    disabled={!mensajePersonalizado}
+                    className="flex-1 bg-slate-900 text-white font-semibold text-sm py-2.5 rounded-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <span>💬</span> Enviar por WhatsApp
+                  </button>
+                </div>
+              </div>
+
             </div>
 
-            {/* HISTORIAL DE REPARACIONES (ESTILO TABLA LIGERA) */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-8 py-5 border-b border-slate-100 bg-white">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                   Historial de Servicios ({clienteSeleccionado.historial?.length})
                 </h3>
               </div>
-              
               <div className="divide-y divide-slate-100">
                 {clienteSeleccionado.historial?.map((ticket: any) => (
                   <div key={ticket.id} className="px-8 py-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
@@ -185,7 +233,6 @@ export default function CRMClientes() {
                     </div>
                   </div>
                 ))}
-                
                 {clienteSeleccionado.historial?.length === 0 && (
                   <div className="px-8 py-10 text-sm text-slate-400 text-center font-medium">
                     El cliente no cuenta con reparaciones finalizadas.
@@ -197,7 +244,7 @@ export default function CRMClientes() {
           </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-slate-400">
-            <div className="w-16 h-16 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center mb-4 text-slate-300">
+             <div className="w-16 h-16 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center mb-4 text-slate-300">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
             </div>
             <p className="font-semibold text-slate-600">Ningún perfil seleccionado</p>
