@@ -191,14 +191,14 @@ export default function CRMClientes() {
                     disabled={mejorandoConIA || !mensajePersonalizado}
                     className="flex-1 bg-white border border-slate-200 text-slate-700 font-semibold text-sm py-2.5 rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    <span>✨</span> {mejorandoConIA ? 'Generando estructura...' : 'Mejorar Estructura'}
+                    <span></span> {mejorandoConIA ? 'Generando estructura...' : 'Mejorar Estructura'}
                   </button>
                   <button
                     onClick={enviarMensajeLibre}
                     disabled={!mensajePersonalizado}
                     className="flex-1 bg-slate-900 text-white font-semibold text-sm py-2.5 rounded-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    <span>💬</span> Enviar por WhatsApp
+                    <span></span> Enviar por WhatsApp
                   </button>
                 </div>
               </div>
