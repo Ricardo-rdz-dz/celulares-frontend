@@ -1,7 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // ✨ 1. Importamos el router
 
 export default function AdminCatalogo() {
+  const router = useRouter(); // ✨ 2. Inicializamos el router
+
   const [catalogo, setCatalogo] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -72,7 +75,18 @@ export default function AdminCatalogo() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl font-black text-slate-800 uppercase mb-6">⚙️ Catálogo de Precios Cotizador</h1>
+        
+        {/* ✨ 3. ENCABEZADO CON BOTÓN DE REGRESO */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <h1 className="text-2xl font-black text-slate-800 uppercase">⚙️ Catálogo de Precios</h1>
+          
+          <button 
+            onClick={() => router.push('/admin')}
+            className="bg-slate-300 hover:bg-slate-400 text-slate-800 px-4 py-2.5 rounded-lg font-bold transition-all flex items-center gap-2 text-sm shadow-sm"
+          >
+            <span>⬅️</span> Volver al Panel
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* FORMULARIO DE ALTA */}
