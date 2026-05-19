@@ -18,7 +18,7 @@ export default function CRMClientes() {
       .catch((err) => console.error(err));
   }, []);
 
-  // Función constructora de mensajes de WhatsApp
+  // Función constructora de mensajes de WhatsApp (Lógica intacta)
   const enviarPromoWhatsApp = (cliente: any, tipoPromo: string) => {
     let telefonoLimpio = String(cliente.telefono).replace(/\D/g, '');
     const numeroConCodigo = telefonoLimpio.startsWith('52') ? telefonoLimpio : `52${telefonoLimpio}`;
@@ -45,30 +45,47 @@ export default function CRMClientes() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col md:flex-row font-sans text-slate-800">
       
       {/* PANEL IZQUIERDO: LISTA DE CLIENTES */}
-      <div className="w-full md:w-1/3 bg-white border-r border-gray-200 h-screen overflow-y-auto flex flex-col">
-        <div className="p-5 border-b border-gray-200 bg-slate-900 text-white sticky top-0 flex justify-between items-center z-10">
-          <h2 className="text-lg font-black uppercase tracking-wide">👥 Mis Clientes</h2>
-          <button onClick={() => router.push('/admin')} className="text-xs bg-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-600 transition-colors">Volver</button>
+      <div className="w-full md:w-1/3 bg-white border-r border-slate-200 h-screen overflow-y-auto flex flex-col">
+        {/* Cabecera del panel izquierdo minimalista */}
+        <div className="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 flex justify-between items-center z-10">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Directorio de Clientes</h2>
+          <button 
+            onClick={() => router.push('/admin')} 
+            className="text-xs font-semibold text-slate-500 hover:text-slate-800 border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded transition-all"
+          >
+            Volver
+          </button>
         </div>
         
         {loading ? (
-          <div className="p-10 text-center text-gray-400">Cargando base de datos...</div>
+          <div className="p-10 text-center text-sm font-medium text-slate-400 animate-pulse">Cargando registros...</div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100">
             {clientes.map(cliente => (
               <div 
                 key={cliente.id} 
                 onClick={() => setClienteSeleccionado(cliente)}
-                className={`p-4 cursor-pointer transition-all hover:bg-blue-50 ${clienteSeleccionado?.id === cliente.id ? 'bg-blue-50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}
+                className={`p-5 cursor-pointer transition-all border-l-4 ${
+                  clienteSeleccionado?.id === cliente.id 
+                    ? 'bg-slate-50 border-slate-800' 
+                    : 'border-transparent hover:bg-slate-50'
+                }`}
               >
-                <h3 className="font-bold text-slate-800">{cliente.nombre}</h3>
-                <p className="text-xs text-slate-500 font-mono mt-1">📱 {cliente.telefono}</p>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{cliente.historial?.length} reparaciones</span>
-                  <span className="text-[10px] font-black text-green-600 bg-green-100 px-2 py-0.5 rounded-full">LTV: ${cliente.total_gastado}</span>
+                <h3 className={`font-semibold ${clienteSeleccionado?.id === cliente.id ? 'text-slate-900' : 'text-slate-700'}`}>
+                  {cliente.nombre}
+                </h3>
+                <p className="text-xs text-slate-500 font-mono mt-1">{cliente.telefono}</p>
+                
+                <div className="flex gap-2 items-center mt-3">
+                  <span className="text-[10px] font-semibold border border-slate-200 text-slate-500 px-2 py-0.5 rounded-md">
+                    {cliente.historial?.length} tickets
+                  </span>
+                  <span className="text-[10px] font-bold border border-slate-800 text-slate-800 px-2 py-0.5 rounded-md">
+                    LTV: ${cliente.total_gastado}
+                  </span>
                 </div>
               </div>
             ))}
@@ -77,60 +94,102 @@ export default function CRMClientes() {
       </div>
 
       {/* PANEL DERECHO: DETALLE Y MARKETING */}
-      <div className="w-full md:w-2/3 h-screen overflow-y-auto bg-slate-50 p-6">
+      <div className="w-full md:w-2/3 h-screen overflow-y-auto bg-[#f8fafc] p-8">
         {clienteSeleccionado ? (
-          <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn">
+          <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
             
             {/* CABECERA DEL CLIENTE */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h2 className="text-2xl font-black text-slate-800 uppercase">{clienteSeleccionado.nombre}</h2>
-              <p className="text-slate-500 font-mono mt-1">{clienteSeleccionado.telefono}</p>
-              <p className="text-xs text-slate-400 mt-2">Cliente desde: {new Date(clienteSeleccionado.created_at).toLocaleDateString()}</p>
-            </div>
-
-            {/* BOTONES DE MARKETING Y VENTAS */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b pb-2">🎯 Acciones de Venta y Fidelización</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'SMARTWATCH')} className="bg-amber-500 hover:bg-amber-600 text-white p-3 rounded-xl font-bold shadow-sm transition-all text-left flex flex-col gap-1 group">
-                  <span className="text-2xl group-hover:scale-110 transition-transform">⌚️</span>
-                  <span className="text-sm">Ofrecer Reloj</span>
-                  <span className="text-[9px] font-normal opacity-80">Promo preferencial</span>
-                </button>
-                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'DESCUENTO_REPARACION')} className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl font-bold shadow-sm transition-all text-left flex flex-col gap-1 group">
-                  <span className="text-2xl group-hover:scale-110 transition-transform">🎟️</span>
-                  <span className="text-sm">Cupón 15%</span>
-                  <span className="text-[9px] font-normal opacity-80">Próxima reparación</span>
-                </button>
-                <button onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'NUEVO_INVENTARIO')} className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-xl font-bold shadow-sm transition-all text-left flex flex-col gap-1 group">
-                  <span className="text-2xl group-hover:scale-110 transition-transform">📱</span>
-                  <span className="text-sm">Catálogo</span>
-                  <span className="text-[9px] font-normal opacity-80">Equipos nuevos</span>
-                </button>
+            <div className="bg-white px-8 py-6 rounded-xl border border-slate-200 shadow-sm flex justify-between items-end">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{clienteSeleccionado.nombre}</h2>
+                <p className="text-sm text-slate-500 font-mono mt-1">{clienteSeleccionado.telefono}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Cliente desde</p>
+                <p className="text-sm text-slate-700 font-medium">{new Date(clienteSeleccionado.created_at).toLocaleDateString()}</p>
               </div>
             </div>
 
-            {/* HISTORIAL DE REPARACIONES */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b pb-2">🛠️ Historial de Tickets ({clienteSeleccionado.historial?.length})</h3>
-              <div className="space-y-3">
+            {/* BOTONES DE MARKETING Y VENTAS (DISEÑO CLEAN/SAAS) */}
+            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">Acciones Comerciales</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                {/* Botón 1 */}
+                <button 
+                  onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'SMARTWATCH')} 
+                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                >
+                  <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">⌚️</div>
+                  <div>
+                    <h4 className="font-semibold text-slate-800 text-sm">Smartwatch</h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Precio preferencial</p>
+                  </div>
+                </button>
+
+                {/* Botón 2 */}
+                <button 
+                  onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'DESCUENTO_REPARACION')} 
+                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                >
+                  <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">🎟️</div>
+                  <div>
+                    <h4 className="font-semibold text-slate-800 text-sm">Cupón 15%</h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Próxima reparación</p>
+                  </div>
+                </button>
+
+                {/* Botón 3 */}
+                <button 
+                  onClick={() => enviarPromoWhatsApp(clienteSeleccionado, 'NUEVO_INVENTARIO')} 
+                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                >
+                  <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">📱</div>
+                  <div>
+                    <h4 className="font-semibold text-slate-800 text-sm">Catálogo</h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Equipos nuevos</p>
+                  </div>
+                </button>
+
+              </div>
+            </div>
+
+            {/* HISTORIAL DE REPARACIONES (ESTILO TABLA LIGERA) */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-8 py-5 border-b border-slate-100 bg-white">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  Historial de Servicios ({clienteSeleccionado.historial?.length})
+                </h3>
+              </div>
+              
+              <div className="divide-y divide-slate-100">
                 {clienteSeleccionado.historial?.map((ticket: any) => (
-                  <div key={ticket.id} className="p-4 bg-slate-50 border border-gray-100 rounded-xl flex justify-between items-center">
+                  <div key={ticket.id} className="px-8 py-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
                     <div>
-                      <div className="font-bold text-slate-800">{ticket.equipos?.marca} {ticket.equipos?.modelo}</div>
-                      <div className="text-xs text-slate-500 mt-1">Falla: {ticket.falla_reportada}</div>
-                      <div className="text-[10px] text-slate-400 mt-2">
-                        📅 {new Date(ticket.created_at).toLocaleDateString()} a las {new Date(ticket.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      <div className="font-semibold text-slate-800">
+                        {ticket.equipos?.marca} {ticket.equipos?.modelo}
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 mt-1">
+                        Servicio: <span className="font-normal text-slate-600">{ticket.falla_reportada}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-2">
+                        {new Date(ticket.created_at).toLocaleDateString()} &bull; {new Date(ticket.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xs font-black px-2 py-1 bg-gray-200 rounded text-gray-600 mb-2">{ticket.estado.replace(/_/g, ' ')}</div>
-                      <div className="font-bold text-slate-800">${ticket.costo_total || 0}</div>
+                    <div className="text-right flex flex-col items-end">
+                      <div className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 border border-slate-200 rounded text-slate-500 mb-2">
+                        {ticket.estado.replace(/_/g, ' ')}
+                      </div>
+                      <div className="font-bold text-slate-900">${ticket.costo_total || 0}</div>
                     </div>
                   </div>
                 ))}
+                
                 {clienteSeleccionado.historial?.length === 0 && (
-                  <p className="text-sm text-slate-500 text-center py-4">No hay reparaciones registradas.</p>
+                  <div className="px-8 py-10 text-sm text-slate-400 text-center font-medium">
+                    El cliente no cuenta con reparaciones finalizadas.
+                  </div>
                 )}
               </div>
             </div>
@@ -138,9 +197,11 @@ export default function CRMClientes() {
           </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-slate-400">
-            <span className="text-6xl mb-4">👋</span>
-            <p className="font-medium">Selecciona un cliente de la lista</p>
-            <p className="text-sm">para ver su historial y enviar promociones.</p>
+            <div className="w-16 h-16 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center mb-4 text-slate-300">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            </div>
+            <p className="font-semibold text-slate-600">Ningún perfil seleccionado</p>
+            <p className="text-sm mt-1">Elige un cliente de la lista para gestionar su cuenta.</p>
           </div>
         )}
       </div>
