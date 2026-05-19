@@ -111,7 +111,7 @@ export default function CotizadorPublicoDinamico() {
       </main>
 
       <footer className="text-center py-4 text-[11px] text-slate-400 border-t border-gray-200 bg-white">
-        &copy; {new Date().getFullYear()} MovilPlace &bull; Conectado al inventario en tiempo real.
+        &copy; {new Date().getFullYear()} MovilPlace  &bull; Conectado al inventario en tiempo real.
       </footer>
     </div>
   );
