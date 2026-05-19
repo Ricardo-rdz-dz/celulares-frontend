@@ -29,18 +29,18 @@ export default function CRMClientes() {
     let mensaje = '';
     const primerEquipo = cliente.historial[0]?.equipos?.marca || 'dispositivo';
 
-    switch (tipoPromo) {
+switch (tipoPromo) {
       case 'SMARTWATCH':
-        mensaje = `¡Hola ${cliente.nombre}! 👋 Soy de MovilPlace, donde reparamos tu ${primerEquipo}.\n\nComo eres cliente preferencial, te escribo para darte un acceso exclusivo: nos acaban de llegar nuevos Smartwatches ⌚️.\n\nPrecio normal: $1,000\n🔥 *Tu precio especial: $600*\n\nEstán volando, ¿te separo uno?`;
+        mensaje = `¡Hola ${cliente.nombre}! 👋 Soy de MovilPlace, donde reparamos tu ${primerEquipo}.\n\nComo eres cliente preferencial, te escribo para darte un acceso exclusivo: nos acaban de llegar nuevos Smartwatches ⌚️.\n\nPrecio normal: $1,000\n🔥 *Tu precio especial: $600*\n\nEstán volando, ¿te separo uno?\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
         break;
       case 'DESCUENTO_REPARACION':
-        mensaje = `¡Hola ${cliente.nombre}! 👋 En MovilPlace valoramos mucho tu preferencia.\n\nTe regalamos un cupón del *15% de descuento* en tu próxima reparación o en la compra de cualquier accesorio válido por todo este mes. 🎟️\n\n¿Tienes algún equipo que necesite mantenimiento?`;
+        mensaje = `¡Hola ${cliente.nombre}! 👋 En MovilPlace valoramos mucho tu preferencia.\n\nTe regalamos un cupón del *15% de descuento* en tu próxima reparación o en la compra de cualquier accesorio válido por todo este mes. 🎟️\n\n¿Tienes algún equipo que necesite mantenimiento?\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
         break;
       case 'NUEVO_INVENTARIO':
-        mensaje = `¡Hola ${cliente.nombre}! 👋 Te saludamos de MovilPlace.\n\nSolo queríamos avisarte que nos acaba de llegar nuevo inventario de celulares y accesorios a súper precios 📱✨.\n\nSi estabas pensando en renovar equipo, avísame y te mando el catálogo sin compromiso.`;
+        mensaje = `¡Hola ${cliente.nombre}! 👋 Te saludamos de MovilPlace.\n\nSolo queríamos avisarte que nos acaba de llegar nuevo inventario de celulares y accesorios a súper precios 📱✨.\n\nSi estabas pensando en renovar equipo, avísame y te mando el catálogo sin compromiso.\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
         break;
       default:
-        mensaje = `¡Hola ${cliente.nombre}! 👋 Te saludamos de MovilPlace...`;
+        mensaje = `¡Hola ${cliente.nombre}! 👋 Te saludamos de MovilPlace...\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
     }
 
     const url = `https://wa.me/${numeroConCodigo}?text=${encodeURIComponent(mensaje)}`;
@@ -48,7 +48,7 @@ export default function CRMClientes() {
   };
 
   // ✨ FUNCIÓN PARA CONECTAR AL MOTOR DE IA EN TU BACKEND
-  const mejorarMensajeIA = async () => {
+ const mejorarMensajeIA = async () => {
     setMejorandoConIA(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/mejorar`, {
@@ -61,7 +61,11 @@ export default function CRMClientes() {
       });
       if (res.ok) {
         const data = await res.json();
-        setMensajePersonalizado(data.mensajeMejorado);
+        
+        // 🎯 Interceptamos el mensaje de la IA y le sumamos la leyenda
+        const mensajeFinal = `${data.mensajeMejorado}\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
+        
+        setMensajePersonalizado(mensajeFinal);
       } else {
         alert('❌ Hubo un error de conexión con el servidor.');
       }
