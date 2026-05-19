@@ -67,26 +67,44 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+  {/* Barra Superior Oscura */}
       <header className="bg-slate-900 text-white border-b-4 border-red-600 shadow-md">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-2xl font-black tracking-wide uppercase">Movil<span className="text-red-500">Place</span></h1>
             <p className="text-slate-400 text-sm">Panel de Administración</p>
           </div>
-          <button 
-            onClick={() => router.push('/admin/nuevo')}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all flex items-center gap-2"
-          >
-            <span className="text-xl">+</span> Recibir Equipo
-          </button>
-          {/* NUEVO BOTÓN: Acceso al catálogo de precios */}
+          
+          {/* Contenedor de Botones de Acción */}
+          <div className="flex flex-wrap justify-center gap-3">
+            
+            {/* ✨ NUEVO BOTÓN: Acceso al CRM de Clientes */}
+            <button 
+              onClick={() => router.push('/admin/clientes')}
+              className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
+              title="Gestión de Clientes y Campañas"
+            >
+              <span>👥</span> CRM Clientes
+            </button>
+
+            {/* BOTÓN EXISTENTE: Acceso al catálogo de precios */}
             <button 
               onClick={() => router.push('/admin/catalogo')}
-              className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm"
+              className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
               title="Configurar catálogo de precios del cotizador"
             >
-              <span>⚙️</span> Agregar precios para cotizador
+              <span></span> Catalogo de precios
             </button>
+
+            {/* BOTÓN EXISTENTE: Recibir Equipo */}
+            <button 
+              onClick={() => router.push('/admin/nuevo')}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all flex items-center gap-2 text-sm"
+            >
+              <span className="text-xl">+</span> Recibir Equipo
+            </button>
+
+          </div>
         </div>
       </header>
 
