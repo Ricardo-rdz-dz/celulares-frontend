@@ -386,6 +386,14 @@ export default function TicketDetail() {
               <p className="text-white mb-4">Estado actual: <span className="font-black text-blue-400">{ticket.estado.replace(/_/g, ' ')}</span></p>
               
               <div className="flex flex-wrap gap-3 mt-8">
+
+                {/* BOTÓN PARA GENERAR LA NOTA FÍSICA */}
+          <button
+            onClick={() => router.push(`/admin/ticket/${ticket.id}/nota`)}
+            className="w-full mt-3 bg-white hover:bg-slate-50 text-slate-800 font-bold py-2.5 px-4 rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-2 text-sm shadow-sm"
+          >
+            <span>🖨️</span> Imprimir Nota de Recepción
+          </button>
 <button 
     onClick={() => cambiarEstado('RECIBIDO')}
     className={`px-4 py-2 rounded-lg font-bold transition-colors ${ticket.estado === 'RECIBIDO' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
