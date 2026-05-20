@@ -105,7 +105,7 @@ export default function NotaImpresion() {
         <div className="text-[9px] text-gray-500 leading-tight border border-dashed p-3 space-y-1">
           <p className="font-bold text-black uppercase">Términos del Servicio Técnico:</p>
           <p>1. Todo equipo se recibe para revisión y diagnóstico. MovilPlace no se hace responsable por fallas ocultas no reportadas al momento de la recepción.</p>
-          <p>2. Transcurridos 30 días naturales a partir de la fecha de aviso de entrega, si el equipo no es reclamado, la empresa no se hace responsable por la integridad del mismo.</p>
+          <p>2. Transcurridos 15 días naturales a partir de la fecha de aviso de entrega, si el equipo no es reclamado, la empresa no se hace responsable por la integridad del mismo.</p>
         </div>
 
         {/* SECCIÓN 5: FIRMAS EN RECONOCIMIENTO */}
