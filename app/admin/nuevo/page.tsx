@@ -15,6 +15,7 @@ export default function NuevoRegistro() {
   const [form, setForm] = useState({
     nombre: '', telefono: '', 
     marca: '', modelo: '', imei: '', pin: '', 
+    costo_total: '0', //
     falla: '', detalles: '', anticipo: '0'
   });
   // ✨ EL BUSCADOR AUTOMÁTICO
@@ -79,6 +80,7 @@ export default function NuevoRegistro() {
           pin_desbloqueo: form.pin,
           detalles_esteticos: form.detalles,
           falla_reportada: form.falla,
+          costo_total: parseFloat(form.costo_total), //
           anticipo: parseFloat(form.anticipo),
           creado_por: creadoPorId // 👈 AQUÍ AGREGAMOS LA AUDITORÍA
         })
@@ -248,22 +250,44 @@ export default function NuevoRegistro() {
             </div>
           </div>
 
-          {/* ANTICIPO Y BOTÓN */}
-          <div className="flex items-center justify-between pt-4">
-            <div className="w-1/4">
-              <label className="block text-sm font-bold text-slate-700 mb-2">Anticipo ($)</label>
-              <input type="number" min="0"
+         {/* ✨ PRESUPUESTO, ANTICIPO Y BOTÓN */}
+          <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center gap-6">
+            
+            <div className="w-full md:w-1/4">
+              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Costo Total ($)</label>
+              <input type="number" min="0" step="0.01"
                 className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-black text-slate-900 outline-none text-xl" 
-                defaultValue="0"
-                onChange={e => setForm({...form, anticipo: e.target.value})} />
+                value={form.costo_total}
+                onFocus={(e) => e.target.value === '0' && setForm({...form, costo_total: ''})}
+                onChange={e => setForm({...form, costo_total: e.target.value})} 
+              />
+            </div>
+
+            <div className="w-full md:w-1/4">
+              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Anticipo ($)</label>
+              <input type="number" min="0" step="0.01"
+                className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-black text-slate-900 outline-none text-xl" 
+                value={form.anticipo}
+                onFocus={(e) => e.target.value === '0' && setForm({...form, anticipo: ''})}
+                onChange={e => setForm({...form, anticipo: e.target.value})} 
+              />
+            </div>
+
+            {/* Calculadora visual de saldo en vivo */}
+            <div className="w-full md:w-1/4 flex flex-col justify-center">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo a Pagar</span>
+              <span className="text-2xl font-black text-slate-800">
+                ${Math.max(0, (parseFloat(form.costo_total || '0') - parseFloat(form.anticipo || '0'))).toFixed(2)}
+              </span>
             </div>
             
-            <div className="w-2/3 mt-6">
+            <div className="w-full md:w-1/4 mt-4 md:mt-0">
               <button type="submit" disabled={loading}
-                className="w-full bg-blue-600 text-white font-black py-4 px-6 rounded-xl hover:bg-blue-700 active:transform active:scale-95 transition-all disabled:bg-slate-400 text-lg flex justify-center items-center gap-2 shadow-xl shadow-blue-500/30">
-                {loading ? 'Procesando...' : 'Registrar y Generar Orden'}
+                className="w-full bg-blue-600 text-white font-black py-4 px-4 rounded-xl hover:bg-blue-700 active:transform active:scale-95 transition-all disabled:bg-slate-400 text-sm flex justify-center items-center shadow-xl shadow-blue-500/30 uppercase tracking-wide">
+                {loading ? 'Procesando...' : 'Generar Orden'}
               </button>
             </div>
+            
           </div>
         </form>
       </div>
