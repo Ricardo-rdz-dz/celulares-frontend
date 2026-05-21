@@ -14,9 +14,10 @@ export default function NuevoRegistro() {
   // Agregamos pin y detalles al estado
   const [form, setForm] = useState({
     nombre: '', telefono: '', 
-    marca: '', modelo: '', imei: '', pin: '', color: '', // ✨ Añadimos 'color'
-    costo_total: '0', //
-    falla: '', detalles: '', anticipo: '0'
+    tipo_equipo: 'Celular', // ✨ NUEVO
+    marca: '', modelo: '', color: 'Negro', imei: '', pin: '', 
+    falla_tipo: 'Pantalla', falla_detalle: '', // ✨ DESGLOSAMOS LA FALLA
+    detalles: '', costo_total: '0', anticipo: '0'
   });
   // ✨ ESTADO PARA LOS CHECKBOXES DE LA NOTA FÍSICA
   const [checks, setChecks] = useState({
@@ -73,8 +74,14 @@ export default function NuevoRegistro() {
         return;
       }
 // ✨ COMPILAMOS LOS DATOS FÍSICOS EN UN SOLO TEXTO LIMPIO
+     // ✨ COMPILAMOS LA FALLA SEGÚN LO QUE ELIGIERON EN EL MENÚ
+      // ✨ 1. COMPILAMOS LOS BOTONES FÍSICOS Y EL COLOR EN UN SOLO TEXTO
       const detallesCompilados = `COLOR: ${form.color || 'N/A'} | ACCESORIOS: Protector [${checks.protector ? 'SI' : 'NO'}], Cargador [${checks.cargador ? 'SI' : 'NO'}], SD [${checks.sd ? 'SI' : 'NO'}], SIM [${checks.sim ? 'SI' : 'NO'}] | ESTADO PREVIO: Reparado [${checks.reparado ? 'SI' : 'NO'}], Mojado [${checks.mojado ? 'SI' : 'NO'}], Apagado [${checks.apagado ? 'SI' : 'NO'}] | OBS: ${form.detalles}`;
-      // ✨ 3. CREAR EL TICKET CON EL ID DEL TÉCNICO
+
+      // ✨ 2. COMPILAMOS LA FALLA SEGÚN LO QUE ELIGIERON EN EL MENÚ
+      const fallaCompilada = form.falla_tipo === 'Otro' ? form.falla_detalle : form.falla_tipo;
+
+      // ✨ 3. CREAR EL TICKET MANDANDO TODO LIMPIO
       const resTicket = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,11 +91,11 @@ export default function NuevoRegistro() {
           modelo: form.modelo,
           imei_o_serie: form.imei,
           pin_desbloqueo: form.pin,
-          detalles_esteticos: detallesCompilados, // 👈 Enviamos el texto compilado
-          falla_reportada: form.falla,
-          costo_total: parseFloat(form.costo_total), //
+          detalles_esteticos: detallesCompilados, // 👈 Se envía el texto de los botones
+          falla_reportada: fallaCompilada,        // 👈 Se envía la falla del menú
+          costo_total: parseFloat(form.costo_total),
           anticipo: parseFloat(form.anticipo),
-          creado_por: creadoPorId // 👈 AQUÍ AGREGAMOS LA AUDITORÍA
+          creado_por: creadoPorId
         })
       });
       const dataTicket = await resTicket.json();
@@ -129,183 +136,179 @@ export default function NuevoRegistro() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+       <form onSubmit={handleSubmit} className="p-8 space-y-6">
           
-          {/* CLIENTE */}
+          {/* 1. CLIENTE (Flujo Tab: Nombre -> Teléfono) */}
           <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100">
-            <h3 className="text-sm font-black uppercase text-red-600 mb-4 tracking-wider">Datos del Cliente</h3>
+            <h3 className="text-sm font-black uppercase text-red-600 mb-4 tracking-wider">1. Datos del Cliente</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Nombre Completo</label>
-                <input type="text" required 
-                  value={form.nombre} /* ✨ Esto hace que se auto-escriba si ya existe */
-                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none" 
-                  onChange={e => setForm({...form, nombre: e.target.value})} />
+                <label className="block text-sm font-bold text-slate-700 mb-2">Teléfono (Búsqueda Automática)</label>
+                <input type="tel" required autoFocus tabIndex={1}
+                  value={form.telefono} 
+                  placeholder="10 dígitos"
+                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-black text-slate-900 outline-none transition-colors" 
+                  onChange={e => setForm({...form, telefono: e.target.value})} />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Teléfono (WhatsApp)</label>
-                <input type="tel" required 
-                  value={form.telefono} /* ✨ Necesario para controlar lo que se escribe */
-                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none" 
-                  onChange={e => setForm({...form, telefono: e.target.value})} />
+                <label className="block text-sm font-bold text-slate-700 mb-2">Nombre Completo</label>
+                <input type="text" required tabIndex={2}
+                  value={form.nombre} 
+                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none transition-colors" 
+                  onChange={e => setForm({...form, nombre: e.target.value})} />
               </div>
             </div>
           </div>
 
-          {/* ✨ ALERTA VIP DE LEALTAD */}
-          {visitasCliente >= 3 && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl flex items-start gap-3 animate-fadeIn shadow-sm">
-              <span className="text-2xl">🌟</span>
-              <div>
-                <h4 className="font-black text-sm uppercase tracking-tight">¡Cliente VIP Frecuente!</h4>
-                <p className="text-xs font-medium mt-0.5">Este cliente tiene <span className="font-black">{visitasCliente} visitas</span>. El sistema sugiere aplicar un <strong>10% de descuento</strong> en mano de obra para premiar su lealtad.</p>
-              </div>
-            </div>
-          )}
+          {/* ... [AQUÍ VAN TUS ALERTAS VIP Y REFERIDOS QUE YA TIENES] ... */}
 
-          {/* ✨ CÓDIGO DE REFERIDO */}
-          {visitasCliente === 0 && form.telefono.length >= 10 && (
-            <div className="bg-purple-50 border border-purple-100 p-4 rounded-xl animate-fadeIn">
-              <label className="block text-xs font-bold text-purple-800 mb-2 uppercase tracking-wider">🎁 ¿Viene recomendado por un amigo?</label>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  placeholder="Ej. RIC-123"
-                  value={codigoIngresado}
-                  onChange={(e) => setCodigoIngresado(e.target.value.toUpperCase())}
-                  className="bg-white border border-purple-200 focus:border-purple-500 rounded-lg p-2 text-sm font-mono outline-none uppercase w-48"
-                />
-                <button 
-                  type="button"
-                  onClick={async () => {
-                    if(!codigoIngresado) return;
-                    try {
-                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/referidos/validar/${codigoIngresado}`);
-                      const data = await res.json();
-                      if(data.valido) {
-                        setReferidoValido({ valido: true, nombre: data.dueño.nombre });
-                      } else {
-                        setReferidoValido({ valido: false });
-                      }
-                    } catch(err) {
-                      console.error("Error validando código:", err);
-                    }
-                  }}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 rounded-lg transition-colors"
-                >
-                  Validar Código
-                </button>
-              </div>
-              
-              {referidoValido?.valido === true && (
-                <p className="text-xs text-purple-700 font-bold mt-2">✅ Código válido. Recomendado por: {referidoValido.nombre} (Aplica descuento al total).</p>
-              )}
-              {referidoValido?.valido === false && (
-                <p className="text-xs text-red-600 font-bold mt-2">❌ Código no encontrado o no válido.</p>
-              )}
-            </div>
-          )}
-
-         {/* EQUIPO */}
+          {/* 2. EQUIPO (Uso intensivo de Selects) */}
           <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100">
-            <h3 className="text-sm font-black uppercase text-blue-600 mb-4 tracking-wider">Detalles del Equipo</h3>
+            <h3 className="text-sm font-black uppercase text-blue-600 mb-4 tracking-wider">2. Dispositivo</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">Marca</label>
-                <input type="text" required className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, marca: e.target.value})} />
+                <label className="block text-xs font-bold text-slate-700 mb-2">Tipo</label>
+                <select tabIndex={3} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 rounded-xl p-2.5 text-sm font-bold outline-none cursor-pointer" 
+                  onChange={e => setForm({...form, tipo_equipo: e.target.value})}>
+                  <option value="Celular">📱 Celular</option>
+                  <option value="Smartwatch">⌚ Smartwatch</option>
+                  <option value="Tablet">💊 Tablet</option>
+                  <option value="Otro">🔧 Otro</option>
+                </select>
               </div>
+              
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">Modelo</label>
-                <input type="text" required className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, modelo: e.target.value})} />
+                <label className="block text-xs font-bold text-slate-700 mb-2">Marca</label>
+                <select tabIndex={4} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 rounded-xl p-2.5 text-sm font-bold outline-none cursor-pointer"
+                  onChange={e => setForm({...form, marca: e.target.value})}>
+                  <option value="">Selecciona...</option>
+                  <option value="Apple">Apple</option>
+                  <option value="Samsung">Samsung</option>
+                  <option value="Motorola">Motorola</option>
+                  <option value="OnePlus">OnePlus</option>
+                  <option value="Infinix">Infinix</option>
+                  <option value="Xiaomi">Xiaomi</option>
+                  <option value="Otra">Otra...</option>
+                </select>
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 mb-2">Modelo Específico</label>
+                <input type="text" required tabIndex={5} placeholder="Ej. RAZR 2024, Galaxy Watch 6..." className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, modelo: e.target.value})} />
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-2">Color</label>
-                <input type="text" required className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, color: e.target.value})} />
-              </div>
-              <div>
-                {/* IMEI ya NO es obligatorio */}
-                <label className="block text-xs font-bold text-slate-700 mb-2">IMEI / Serie (Opcional)</label>
-                <input type="text" className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, imei: e.target.value})} />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">PIN / Patrón</label>
-                <input type="text" className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" placeholder="Opcional" onChange={e => setForm({...form, pin: e.target.value})} />
+                <select tabIndex={6} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 rounded-xl p-2.5 text-sm font-bold outline-none cursor-pointer"
+                  onChange={e => setForm({...form, color: e.target.value})}>
+                  <option value="Negro">Negro</option>
+                  <option value="Blanco">Blanco</option>
+                  <option value="Plata/Gris">Plata/Gris</option>
+                  <option value="Azul">Azul</option>
+                  <option value="Rojo">Rojo</option>
+                  <option value="Otro">Otro</option>
+                </select>
               </div>
             </div>
 
-            {/* ✨ CHECKBOXES (Accesorios y Estado) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5 bg-white p-4 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">IMEI / Serie (Opcional)</label>
+                <input type="text" tabIndex={7} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, imei: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">PIN / Patrón de Desbloqueo</label>
+                <input type="text" tabIndex={8} placeholder="Ej. 1234 o L" className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 rounded-xl p-2.5 text-sm font-black tracking-widest outline-none" onChange={e => setForm({...form, pin: e.target.value})} />
+              </div>
+            </div>
+
+            {/* ✨ BOTONES RÁPIDOS EN VEZ DE CHECKBOXES */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-4 rounded-xl border border-slate-200">
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b pb-1">¿Qué deja el cliente?</p>
-                <div className="grid grid-cols-2 gap-3 text-sm font-bold text-slate-700">
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-blue-600" onChange={e => setChecks({...checks, protector: e.target.checked})}/> Protector</label>
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-blue-600" onChange={e => setChecks({...checks, cargador: e.target.checked})}/> Cargador</label>
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-blue-600" onChange={e => setChecks({...checks, sd: e.target.checked})}/> Memoria SD</label>
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-blue-600" onChange={e => setChecks({...checks, sim: e.target.checked})}/> SIM</label>
+                <div className="flex flex-wrap gap-2">
+                  {['protector', 'cargador', 'sd', 'sim'].map((item) => (
+                    <button type="button" key={item} tabIndex={9}
+                      onClick={() => setChecks({...checks, [item]: !checks[item as keyof typeof checks]})}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${checks[item as keyof typeof checks] ? 'bg-blue-100 border-blue-400 text-blue-800 shadow-inner' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                      {checks[item as keyof typeof checks] ? '✅' : '❌'} {item.toUpperCase()}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b pb-1">Estado de Ingreso</p>
-                <div className="flex gap-4 text-sm font-bold text-slate-700">
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-red-500" onChange={e => setChecks({...checks, reparado: e.target.checked})}/> Pre-Reparado</label>
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-red-500" onChange={e => setChecks({...checks, mojado: e.target.checked})}/> Mojado</label>
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-red-500" onChange={e => setChecks({...checks, apagado: e.target.checked})}/> Apagado</label>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b pb-1">Condición de Riesgo</p>
+                <div className="flex flex-wrap gap-2">
+                  {['reparado', 'mojado', 'apagado'].map((item) => (
+                    <button type="button" key={item} tabIndex={10}
+                      onClick={() => setChecks({...checks, [item]: !checks[item as keyof typeof checks]})}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${checks[item as keyof typeof checks] ? 'bg-red-100 border-red-400 text-red-800 shadow-inner' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>
+                      {checks[item as keyof typeof checks] ? '⚠️' : '✓'} {item.toUpperCase()}
+                    </button>
+                  ))}
                 </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Falla Reportada</label>
-                <textarea required rows={2} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium outline-none resize-none" placeholder="Ej. Pantalla quebrada" onChange={e => setForm({...form, falla: e.target.value})}></textarea>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Observaciones Extra</label>
-                <textarea rows={2} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium outline-none resize-none" placeholder="Opcional. Rayones, golpes, etc." onChange={e => setForm({...form, detalles: e.target.value})}></textarea>
               </div>
             </div>
           </div>
-         {/* ✨ PRESUPUESTO, ANTICIPO Y BOTÓN */}
-          <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center gap-6">
-            
+
+          {/* 3. DIAGNÓSTICO */}
+          <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100">
+            <h3 className="text-sm font-black uppercase text-orange-600 mb-4 tracking-wider">3. Diagnóstico</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Falla Principal</label>
+                <select tabIndex={11} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 rounded-xl p-3 text-sm font-bold outline-none cursor-pointer mb-2"
+                  onChange={e => setForm({...form, falla_tipo: e.target.value})}>
+                  <option value="Pantalla Quebrada / Touch">Pantalla Quebrada / Touch</option>
+                  <option value="Batería Dañada / Inflada">Batería Dañada / Inflada</option>
+                  <option value="Centro de Carga">Centro de Carga</option>
+                  <option value="Desbloqueo / Software">Desbloqueo / Software</option>
+                  <option value="Limpieza / Mantenimiento">Limpieza / Mantenimiento</option>
+                  <option value="Otro">Otro problema...</option>
+                </select>
+                {form.falla_tipo === 'Otro' && (
+                  <input type="text" tabIndex={12} required placeholder="Especifica la falla..." className="w-full bg-white border-2 border-orange-200 focus:border-orange-500 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, falla_detalle: e.target.value})} />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Detalles Estéticos / Rayones</label>
+                <textarea tabIndex={13} rows={2} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium outline-none resize-none" placeholder="Opcional. Ej. Tapa trasera fisurada." onChange={e => setForm({...form, detalles: e.target.value})}></textarea>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. FINANZAS Y COBRO */}
+          <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center gap-6">
             <div className="w-full md:w-1/4">
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Costo Total ($)</label>
-              <input type="number" min="0" step="0.01"
-                className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-black text-slate-900 outline-none text-xl" 
-                value={form.costo_total}
-                onFocus={(e) => e.target.value === '0' && setForm({...form, costo_total: ''})}
-                onChange={e => setForm({...form, costo_total: e.target.value})} 
-              />
+              <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Costo Total ($)</label>
+              <input type="number" min="0" step="0.01" tabIndex={14}
+                className="w-full bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:ring-0 rounded-xl p-3 font-black text-white outline-none text-xl" 
+                value={form.costo_total} onFocus={(e) => e.target.value === '0' && setForm({...form, costo_total: ''})} onChange={e => setForm({...form, costo_total: e.target.value})} />
             </div>
 
             <div className="w-full md:w-1/4">
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Anticipo ($)</label>
-              <input type="number" min="0" step="0.01"
-                className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-black text-slate-900 outline-none text-xl" 
-                value={form.anticipo}
-                onFocus={(e) => e.target.value === '0' && setForm({...form, anticipo: ''})}
-                onChange={e => setForm({...form, anticipo: e.target.value})} 
-              />
+              <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Anticipo ($)</label>
+              <input type="number" min="0" step="0.01" tabIndex={15}
+                className="w-full bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:ring-0 rounded-xl p-3 font-black text-white outline-none text-xl" 
+                value={form.anticipo} onFocus={(e) => e.target.value === '0' && setForm({...form, anticipo: ''})} onChange={e => setForm({...form, anticipo: e.target.value})} />
             </div>
 
-            {/* Calculadora visual de saldo en vivo */}
             <div className="w-full md:w-1/4 flex flex-col justify-center">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo a Pagar</span>
-              <span className="text-2xl font-black text-slate-800">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Saldo a Pagar</span>
+              <span className="text-3xl font-black text-emerald-400">
                 ${Math.max(0, (parseFloat(form.costo_total || '0') - parseFloat(form.anticipo || '0'))).toFixed(2)}
               </span>
             </div>
             
             <div className="w-full md:w-1/4 mt-4 md:mt-0">
-              <button type="submit" disabled={loading}
-                className="w-full bg-blue-600 text-white font-black py-4 px-4 rounded-xl hover:bg-blue-700 active:transform active:scale-95 transition-all disabled:bg-slate-400 text-sm flex justify-center items-center shadow-xl shadow-blue-500/30 uppercase tracking-wide">
-                {loading ? 'Procesando...' : 'Generar Orden'}
+              <button type="submit" disabled={loading} tabIndex={16}
+                className="w-full bg-blue-600 text-white font-black py-4 px-4 rounded-xl hover:bg-blue-500 active:transform active:scale-95 transition-all disabled:bg-slate-700 text-sm flex justify-center items-center shadow-[0_0_20px_rgba(37,99,235,0.3)] uppercase tracking-wide">
+                {loading ? 'Cargando...' : 'IMPRIMIR TICKET'}
               </button>
             </div>
-            
           </div>
-        </form>
+        </form>  
       </div>
     </div>
   );
