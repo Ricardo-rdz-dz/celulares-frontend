@@ -52,8 +52,8 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
 
       {/* BOTONES DE ACCIÓN (Asegúrate de tener la clase print:hidden o similar para que no se impriman) */}
       <div className="mb-6 flex justify-between items-center border-b pb-4 print:hidden">
-        <button onClick={() => router.back()} className="border px-3 py-1.5 rounded hover:bg-slate-50 font-medium">
-          ⬅️ Volver
+        <button onClick={() => router.push('/admin')} className="border px-3 py-1.5 rounded hover:bg-slate-50 font-medium">
+          ⬅️ Volver al Panel
         </button>
         <button onClick={() => window.print()} className="bg-emerald-600 text-white px-4 py-1.5 rounded font-bold shadow hover:bg-emerald-700">
           🖨️ Imprimir Recibo Final
