@@ -1,19 +1,24 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
-export default function NotaDeVenta({ params }: { params: { id: string } }) {
+// ✨ NOTA: Los paréntesis quedan completamente vacíos
+export default function NotaDeVenta() {
   const router = useRouter();
+  const params = useParams(); // ✨ Atrapamos los parámetros de la URL
+  const id = params?.id;      // ✨ Sacamos el ID exacto
+
   const [venta, setVenta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Aquí hacemos la consulta a Supabase directo para mayor rapidez
+    // ✨ FRENO DE MANO: Si aún no lee el ID de la URL, nos esperamos
+    if (!id) return;
+
     const fetchVenta = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ventas/${params.id}`); 
-        // 💡 NOTA: Tendrás que crear esta ruta GET rápida en tu index.js si no la tienes, 
-        // o jalarla con el cliente de Supabase directo.
+        // Usamos el "id" limpio que sacamos de useParams
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ventas/${id}`); 
         const data = await res.json();
         setVenta(data);
       } catch (error) {
@@ -22,7 +27,7 @@ export default function NotaDeVenta({ params }: { params: { id: string } }) {
       setLoading(false);
     };
     fetchVenta();
-  }, [params.id]);
+  }, [id]); // ✨ Dependemos del "id" limpio
 
   if (loading) return <div className="text-center mt-20 font-bold text-white">Generando Nota de Venta...</div>;
   if (!venta) return <div className="text-center mt-20 text-white">Venta no encontrada.</div>;
