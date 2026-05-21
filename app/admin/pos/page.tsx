@@ -88,6 +88,12 @@ export default function PuntoDeVenta() {
         <button onClick={() => router.push('/admin')} className="text-slate-400 hover:text-white font-bold transition">
           ⬅️ Volver al panel
         </button>
+        <button 
+  onClick={() => router.push('/admin/pos/historial')} 
+  className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl border border-slate-700 transition"
+>
+  📋 Ver Registro de Ventas
+</button>
         <h2 className="text-xl font-black text-white uppercase tracking-widest">🛒 Punto de Venta</h2>
       </div>
 

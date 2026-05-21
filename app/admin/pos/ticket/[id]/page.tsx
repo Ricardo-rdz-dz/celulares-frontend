@@ -69,8 +69,10 @@ export default function NotaDeVenta() {
           </p>
           <div className="flex justify-center gap-3 text-[10px] font-bold mt-2 text-gray-800">
             <span>Ventas: 686 176 4066</span> | 
-            <span>Reparaciones: 686 172 0406</span>
+            <span>Reparaciones: 686 172 0406</span> | 
+            <span>Desbloqueos: 686 168 7729</span>
           </div>
+          
         </div>
 
         {/* FOLIO Y FECHA */}
