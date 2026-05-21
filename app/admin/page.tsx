@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
   // ✨ NUEVO ESTADO: Filtro de Tiempo (Por defecto mostramos el último mes)
   const [filtroTiempo, setFiltroTiempo] = useState('MES'); 
+  const [usuarioActivo, setUsuarioActivo] = useState<any>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets`, { cache: 'no-store' })
@@ -39,6 +40,19 @@ export default function AdminDashboard() {
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+  const userRaw = localStorage.getItem('movilplace_user');
+  if (userRaw) {
+    setUsuarioActivo(JSON.parse(userRaw));
+  }
+}, []);
+
+const handleCerrarSesion = () => {
+  localStorage.removeItem('movilplace_token');
+  localStorage.removeItem('movilplace_user');
+  router.push('/login');
+};
 
   const colorEstado = (estado: string) => {
     switch (estado) {
@@ -86,27 +100,51 @@ export default function AdminDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-slate-900 text-white border-b-4 border-red-600 shadow-md">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-black tracking-wide uppercase">Movil<span className="text-red-500">Place</span></h1>
-            <p className="text-slate-400 text-sm">Panel de Administración</p>
+  <div className="min-h-screen bg-gray-100">
+    <header className="bg-slate-900 text-white border-b-4 border-red-600 shadow-md">
+      {/* BARRA UTILITARIA SUPERIOR (Para Usuario y Logout) */}
+      <div className="bg-slate-950 px-6 py-2 flex justify-end items-center gap-4 border-b border-slate-800 text-xs">
+        {usuarioActivo && (
+          <div className="flex items-center gap-3">
+            <span className="text-slate-500">Sesión activa:</span>
+            <button 
+              onClick={() => router.push('/admin/perfil')}
+              className="font-bold text-slate-300 hover:text-white underline underline-offset-4 transition-colors flex items-center gap-1"
+              title="Ir a mi perfil"
+            >
+              👤 {usuarioActivo.nombre} ({usuarioActivo.rol})
+            </button>
+            <span className="text-slate-700">|</span>
+            <button 
+              onClick={handleCerrarSesion}
+              className="text-red-400 hover:text-red-500 font-semibold transition-colors"
+            >
+              Cerrar Sesión
+            </button>
           </div>
-          
-          <div className="flex flex-wrap justify-center gap-3">
-            <button onClick={() => router.push('/admin/clientes')} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm" title="Gestión de Clientes y Campañas">
-              <span>👥</span> CRM Clientes
-            </button>
-            <button onClick={() => router.push('/admin/catalogo')} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm" title="Configurar catálogo de precios">
-              <span>⚙️</span> Precios
-            </button>
-            <button onClick={() => router.push('/admin/nuevo')} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all flex items-center gap-2 text-sm">
-              <span className="text-xl">+</span> Recibir Equipo
-            </button>
-          </div>
+        )}
+      </div>
+
+      {/* CONTENIDO PRINCIPAL DEL HEADER */}
+      <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black tracking-wide uppercase">Movil<span className="text-red-500">Place</span></h1>
+          <p className="text-slate-400 text-sm">Panel de Administración</p>
         </div>
-      </header>
+        
+        <div className="flex flex-wrap justify-center gap-3">
+          <button onClick={() => router.push('/admin/clientes')} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm">
+            <span>👥</span> CRM Clientes
+          </button>
+          <button onClick={() => router.push('/admin/catalogo')} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm">
+            <span>⚙️</span> Precios
+          </button>
+          <button onClick={() => router.push('/admin/nuevo')} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 text-sm">
+            <span className="text-xl">+</span> Recibir Equipo
+          </button>
+        </div>
+      </div>
+    </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         
