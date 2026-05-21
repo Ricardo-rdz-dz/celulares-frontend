@@ -77,7 +77,7 @@ export default function NotaImpresion() {
           <div className="grid grid-cols-3 gap-3">
             <div><span className="text-gray-400 block">Marca / Modelo</span> <span className="font-bold">{ticket.equipos?.marca} {ticket.equipos?.modelo}</span></div>
             <div><span className="text-gray-400 block">IMEI / Serie</span> <span className="font-mono">{ticket.equipos?.imei_o_serie || 'N/A'}</span></div>
-            <div><span className="text-gray-400 block">PIN / Patrón</span> <span className="font-mono font-semibold">{ticket.equipos?.password_equipo || 'N/A'}</span></div>
+            <div><span className="text-gray-400 block">PIN / Patrón</span> <span className="font-mono font-semibold">{ticket.equipos?.pin_desbloqueo ||     'N/A'}</span></div>
           </div>
           <div className="mt-2 bg-gray-50 p-2 border border-gray-200 rounded">
             <span className="text-gray-500 block font-medium">Detalles Estéticos de Recepción:</span>
