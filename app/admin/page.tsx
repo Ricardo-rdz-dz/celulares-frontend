@@ -114,6 +114,14 @@ const handleCerrarSesion = () => {
             >
               👤 {usuarioActivo.nombre} ({usuarioActivo.rol})
             </button>
+            {/* ✨ NUEVO BOTÓN: Acceso a Métricas */}
+            <button 
+              onClick={() => router.push('/admin/metricas')}
+              className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
+              title="Ver Dashboard de KPIs"
+            >
+              <span>📊</span> Métricas
+            </button>
             <span className="text-slate-700">|</span>
             <button 
               onClick={handleCerrarSesion}
