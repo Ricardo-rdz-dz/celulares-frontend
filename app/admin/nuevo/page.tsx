@@ -189,6 +189,11 @@ export default function NuevoRegistro() {
                   <option value="OnePlus">OnePlus</option>
                   <option value="Infinix">Infinix</option>
                   <option value="Xiaomi">Xiaomi</option>
+                  <option value="Xiaomi">TECNO</option>
+                  <option value="Xiaomi">OPPO</option>
+                  <option value="Xiaomi">Alcatel</option>
+                  <option value="Xiaomi">Realme</option>
+                  <option value="Xiaomi">ZTE</option>
                   <option value="Otra">Otra...</option>
                 </select>
               </div>
@@ -271,9 +276,22 @@ export default function NuevoRegistro() {
                   <input type="text" tabIndex={12} required placeholder="Especifica la falla..." className="w-full bg-white border-2 border-orange-200 focus:border-orange-500 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, falla_detalle: e.target.value})} />
                 )}
               </div>
-              <div>
+             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Detalles Estéticos / Rayones</label>
-                <textarea tabIndex={13} rows={2} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium outline-none resize-none" placeholder="Opcional. Ej. Tapa trasera fisurada." onChange={e => setForm({...form, detalles: e.target.value})}></textarea>
+                <select tabIndex={13} 
+                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium outline-none cursor-pointer" 
+                  onChange={e => setForm({...form, detalles: e.target.value})}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Selecciona el estado físico...</option>
+                  <option value="Sin detalles esteticos">✨ Sin detalles estéticos</option>
+                  <option value="Raspones en los bordes">Raspones en los bordes</option>
+                  <option value="Golpes en los bordes">Golpes en los bordes</option>
+                  <option value="Pantalla rayada">Pantalla rayada</option>
+                  <option value="Lente de camara roto">Lente de cámara roto</option>
+                  <option value="Pantalla quebrada">Pantalla quebrada</option>
+                  <option value="Tapa trasera despegada/quebrada/dañada">Tapa trasera despegada/quebrada/dañada</option>
+                </select>
               </div>
             </div>
           </div>
