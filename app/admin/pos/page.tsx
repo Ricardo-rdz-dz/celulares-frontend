@@ -60,6 +60,12 @@ export default function PuntoDeVenta() {
       const data = await res.json();
       
       if (res.ok) {
+        if (res.ok) {
+        // ✨ En vez de solo limpiar la pantalla, saltamos al ticket de impresión
+        router.push(`/admin/pos/ticket/${data.venta_id}`);
+      } else {
+        alert(`Error: ${data.error}`);
+      }
         alert('✅ Venta procesada con éxito. Stock descontado.');
         // Aquí en el futuro enlazaremos la impresión de la Nota de Venta
         setProducto(null);
