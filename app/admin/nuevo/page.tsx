@@ -1,10 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect} from 'react';
 import { useRouter } from 'next/navigation';
+
+
 
 export default function NuevoRegistro() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [visitasCliente, setVisitasCliente] = useState(0);
+  const [codigoIngresado, setCodigoIngresado] = useState('');
+  const [referidoValido, setReferidoValido] = useState<{valido: boolean, nombre?: string} | null>(null);
   
   // Agregamos pin y detalles al estado
   const [form, setForm] = useState({
@@ -12,6 +17,28 @@ export default function NuevoRegistro() {
     marca: '', modelo: '', imei: '', pin: '', 
     falla: '', detalles: '', anticipo: '0'
   });
+  // ✨ EL BUSCADOR AUTOMÁTICO
+  // Este código vigila el campo de teléfono. Si escribes 10 números, busca al cliente.
+  useEffect(() => {
+    const tel = form.telefono.replace(/\D/g, '');
+    if (tel.length >= 10) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/telefono/${tel}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.encontrado) {
+            // Autocompleta el nombre y guarda las visitas
+            setForm(prev => ({ ...prev, nombre: data.cliente.nombre }));
+            setVisitasCliente(data.cliente.visitas || 0);
+          } else {
+            // Es cliente nuevo
+            setVisitasCliente(0);
+          }
+        })
+        .catch(err => console.error(err));
+    } else {
+      setVisitasCliente(0);
+    }
+  }, [form.telefono]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +102,7 @@ export default function NuevoRegistro() {
     }
   };
 
-  return (
+ return (
     <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 px-6">
       <div className="max-w-4xl mx-auto w-full mb-6">
         <button onClick={() => router.push('/admin')} className="text-slate-400 hover:text-white flex items-center gap-2 font-bold transition">
@@ -103,17 +130,73 @@ export default function NuevoRegistro() {
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Nombre Completo</label>
                 <input type="text" required 
+                  value={form.nombre} /* ✨ Esto hace que se auto-escriba si ya existe */
                   className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none" 
                   onChange={e => setForm({...form, nombre: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Teléfono (WhatsApp)</label>
                 <input type="tel" required 
+                  value={form.telefono} /* ✨ Necesario para controlar lo que se escribe */
                   className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none" 
                   onChange={e => setForm({...form, telefono: e.target.value})} />
               </div>
             </div>
           </div>
+
+          {/* ✨ ALERTA VIP DE LEALTAD */}
+          {visitasCliente >= 3 && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl flex items-start gap-3 animate-fadeIn shadow-sm">
+              <span className="text-2xl">🌟</span>
+              <div>
+                <h4 className="font-black text-sm uppercase tracking-tight">¡Cliente VIP Frecuente!</h4>
+                <p className="text-xs font-medium mt-0.5">Este cliente tiene <span className="font-black">{visitasCliente} visitas</span>. El sistema sugiere aplicar un <strong>10% de descuento</strong> en mano de obra para premiar su lealtad.</p>
+              </div>
+            </div>
+          )}
+
+          {/* ✨ CÓDIGO DE REFERIDO */}
+          {visitasCliente === 0 && form.telefono.length >= 10 && (
+            <div className="bg-purple-50 border border-purple-100 p-4 rounded-xl animate-fadeIn">
+              <label className="block text-xs font-bold text-purple-800 mb-2 uppercase tracking-wider">🎁 ¿Viene recomendado por un amigo?</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Ej. RIC-123"
+                  value={codigoIngresado}
+                  onChange={(e) => setCodigoIngresado(e.target.value.toUpperCase())}
+                  className="bg-white border border-purple-200 focus:border-purple-500 rounded-lg p-2 text-sm font-mono outline-none uppercase w-48"
+                />
+                <button 
+                  type="button"
+                  onClick={async () => {
+                    if(!codigoIngresado) return;
+                    try {
+                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/referidos/validar/${codigoIngresado}`);
+                      const data = await res.json();
+                      if(data.valido) {
+                        setReferidoValido({ valido: true, nombre: data.dueño.nombre });
+                      } else {
+                        setReferidoValido({ valido: false });
+                      }
+                    } catch(err) {
+                      console.error("Error validando código:", err);
+                    }
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 rounded-lg transition-colors"
+                >
+                  Validar Código
+                </button>
+              </div>
+              
+              {referidoValido?.valido === true && (
+                <p className="text-xs text-purple-700 font-bold mt-2">✅ Código válido. Recomendado por: {referidoValido.nombre} (Aplica descuento al total).</p>
+              )}
+              {referidoValido?.valido === false && (
+                <p className="text-xs text-red-600 font-bold mt-2">❌ Código no encontrado o no válido.</p>
+              )}
+            </div>
+          )}
 
           {/* EQUIPO */}
           <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100">
@@ -186,4 +269,4 @@ export default function NuevoRegistro() {
       </div>
     </div>
   );
-}
+};
