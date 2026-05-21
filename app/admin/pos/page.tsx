@@ -134,13 +134,25 @@ export default function PuntoDeVenta() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-black text-slate-600 uppercase mb-2">¿Qué incluye el equipo? / Regalos</label>
-                <textarea 
-                  rows={3} 
-                  className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-3 font-medium outline-none resize-none text-sm"
+                <select 
+                  className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-3 font-bold text-slate-700 outline-none cursor-pointer text-sm"
                   value={formVenta.detalles_extras}
                   onChange={e => setFormVenta({...formVenta, detalles_extras: e.target.value})}
-                  placeholder="Ej. Se regala funda transparente y mica."
-                />
+                >
+                  <option value="Solo equipo (Sin accesorios)">Solo equipo (Sin accesorios)</option>
+                  <option value="Caja">Caja</option>
+                  <option value="Cargador">Cargador</option>
+                  <option value="Caja y Cargador">Caja y Cargador</option>
+                  <option value="Vidrio templado">Vidrio templado</option>
+                  <option value="Caja y Vidrio templado">Caja y Vidrio templado</option>
+                  <option value="Cargador y Vidrio templado">Cargador y Vidrio templado</option>
+                  <option value="Caja, Cargador y Vidrio templado">Caja, Cargador y Vidrio templado</option>
+                  <option value="Audífonos">Audífonos</option>
+                  <option value="SmartWatch">SmartWatch</option>
+                  <option value="Caja, Cargador y Audífonos">Caja, Cargador y Audífonos</option>
+                  <option value="Caja, Cargador y SmartWatch">Caja, Cargador y SmartWatch</option>
+                  <option value="Paquete Premium (Mica, Funda, Cargador)">Paquete Premium (Mica, Funda, Cargador)</option>
+                </select>
               </div>
               
               <div className="space-y-4">
