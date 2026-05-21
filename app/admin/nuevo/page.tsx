@@ -18,6 +18,15 @@ export default function NuevoRegistro() {
     setLoading(true);
 
     try {
+      // ✨ 1. EXTRAER EL USUARIO ACTIVO DEL NAVEGADOR
+      let creadoPorId = null;
+      const usuarioActivoRaw = localStorage.getItem('movilplace_user');
+      if (usuarioActivoRaw) {
+        const usuario = JSON.parse(usuarioActivoRaw);
+        creadoPorId = usuario.id;
+      }
+
+      // 2. CREAR O RECUPERAR CLIENTE
       const resCliente = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,7 +40,7 @@ export default function NuevoRegistro() {
         return;
       }
 
-      // Enviamos TODOS los datos al backend
+      // ✨ 3. CREAR EL TICKET CON EL ID DEL TÉCNICO
       const resTicket = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,7 +52,8 @@ export default function NuevoRegistro() {
           pin_desbloqueo: form.pin,
           detalles_esteticos: form.detalles,
           falla_reportada: form.falla,
-          anticipo: parseFloat(form.anticipo)
+          anticipo: parseFloat(form.anticipo),
+          creado_por: creadoPorId // 👈 AQUÍ AGREGAMOS LA AUDITORÍA
         })
       });
       const dataTicket = await resTicket.json();
@@ -54,7 +64,8 @@ export default function NuevoRegistro() {
         return;
       }
 
-      router.push('/admin');
+      // ✨ 4. FLUJO AUTOMATIZADO: Redirigir directo a imprimir la nota de recepción
+      router.push(`/admin/ticket/${dataTicket.ticket.id}/nota`);
 
     } catch (error) {
       console.error("Error:", error);
