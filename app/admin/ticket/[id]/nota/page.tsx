@@ -36,6 +36,16 @@ export default function NotaImpresion() {
   return (
     <div className="p-8 max-w-2xl mx-auto bg-white text-black font-sans text-xs bg-transparent">
       
+      {/* ✨ MAGIA CSS PARA LIMPIAR LA IMPRESIÓN DE ENCABEZADOS Y URLS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          /* Esto elimina los textos de URL, fecha y título del navegador */
+          @page { margin: 0; }
+          /* Esto le devuelve un margen interno seguro al diseño para que no se pegue al borde del papel */
+          body { padding: 1cm; }
+        }
+      `}} />
+
       {/* BOTÓN AUXILIAR (Oculto al imprimir) */}
       <div className="mb-6 flex justify-between items-center border-b pb-4 print:hidden">
         <button onClick={() => router.push(`/admin/ticket/${id}`)} className="border px-3 py-1.5 rounded hover:bg-slate-50 font-medium">

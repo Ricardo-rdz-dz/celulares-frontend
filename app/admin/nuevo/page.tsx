@@ -171,10 +171,10 @@ export default function NuevoRegistro() {
                 <label className="block text-xs font-bold text-slate-700 mb-2">Tipo</label>
                 <select tabIndex={3} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 rounded-xl p-2.5 text-sm font-bold outline-none cursor-pointer" 
                   onChange={e => setForm({...form, tipo_equipo: e.target.value})}>
-                  <option value="Celular">📱 Celular</option>
-                  <option value="Smartwatch">⌚ Smartwatch</option>
-                  <option value="Tablet">💊 Tablet</option>
-                  <option value="Otro">🔧 Otro</option>
+                  <option value="Celular"> Celular</option>
+                  <option value="Smartwatch"> Smartwatch</option>
+                  <option value="Tablet"> Tablet</option>
+                  <option value="Otro"> Otro</option>
                 </select>
               </div>
               
