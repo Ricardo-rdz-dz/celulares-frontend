@@ -38,17 +38,29 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
   if (!ticket) return <div className="p-10 text-center font-mono text-black">Generando recibo...</div>;
 
   return (
-    <div className="p-4 max-w-sm mx-auto text-black bg-white font-mono text-sm">
+    <div className="p-8 max-w-2xl mx-auto bg-white text-black font-sans text-xs bg-transparent">
       
-      {/* ✨ BOTONES AUXILIARES (Se ocultan automáticamente al imprimir gracias a print:hidden) */}
-      <div className="mb-6 flex justify-between items-center border-b border-gray-200 pb-4 print:hidden font-sans">
-        <button onClick={() => router.push(`/admin/ticket/${ticketId}`)} className="border border-gray-300 px-3 py-1.5 rounded hover:bg-slate-50 font-medium text-xs transition-colors">
+      {/* ✨ MAGIA CSS PARA LIMPIAR LA IMPRESIÓN DEL RECIBO FINAL */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          /* Elimina los textos de URL, fecha y título de la pestaña */
+          @page { margin: 0; }
+          /* Devuelve un espacio interno seguro para que el recibo no se pegue al ras del papel */
+          body { padding: 1cm; }
+        }
+      `}} />
+
+      {/* BOTONES DE ACCIÓN (Asegúrate de tener la clase print:hidden o similar para que no se impriman) */}
+      <div className="mb-6 flex justify-between items-center border-b pb-4 print:hidden">
+        <button onClick={() => router.back()} className="border px-3 py-1.5 rounded hover:bg-slate-50 font-medium">
           ⬅️ Volver
         </button>
-        <button onClick={() => window.print()} className="bg-slate-950 text-white px-4 py-1.5 rounded font-bold text-xs shadow-sm hover:bg-slate-800 transition-colors">
-          🖨️ Imprimir
+        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-4 py-1.5 rounded font-bold shadow hover:bg-emerald-700">
+          🖨️ Imprimir Recibo Final
         </button>
       </div>
+
+      {/* Aquí abajo continúa el diseño de tu recibo de entrega final... */}
 
       {/* --- INICIO DEL DISEÑO DEL TICKET --- */}
       
