@@ -14,9 +14,14 @@ export default function NuevoRegistro() {
   // Agregamos pin y detalles al estado
   const [form, setForm] = useState({
     nombre: '', telefono: '', 
-    marca: '', modelo: '', imei: '', pin: '', 
+    marca: '', modelo: '', imei: '', pin: '', color: '', // ✨ Añadimos 'color'
     costo_total: '0', //
     falla: '', detalles: '', anticipo: '0'
+  });
+  // ✨ ESTADO PARA LOS CHECKBOXES DE LA NOTA FÍSICA
+  const [checks, setChecks] = useState({
+    protector: false, cargador: false, sd: false, sim: false,
+    reparado: false, mojado: false, apagado: false
   });
   // ✨ EL BUSCADOR AUTOMÁTICO
   // Este código vigila el campo de teléfono. Si escribes 10 números, busca al cliente.
@@ -67,7 +72,8 @@ export default function NuevoRegistro() {
         setLoading(false);
         return;
       }
-
+// ✨ COMPILAMOS LOS DATOS FÍSICOS EN UN SOLO TEXTO LIMPIO
+      const detallesCompilados = `COLOR: ${form.color || 'N/A'} | ACCESORIOS: Protector [${checks.protector ? 'SI' : 'NO'}], Cargador [${checks.cargador ? 'SI' : 'NO'}], SD [${checks.sd ? 'SI' : 'NO'}], SIM [${checks.sim ? 'SI' : 'NO'}] | ESTADO PREVIO: Reparado [${checks.reparado ? 'SI' : 'NO'}], Mojado [${checks.mojado ? 'SI' : 'NO'}], Apagado [${checks.apagado ? 'SI' : 'NO'}] | OBS: ${form.detalles}`;
       // ✨ 3. CREAR EL TICKET CON EL ID DEL TÉCNICO
       const resTicket = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets`, {
         method: 'POST',
@@ -78,7 +84,7 @@ export default function NuevoRegistro() {
           modelo: form.modelo,
           imei_o_serie: form.imei,
           pin_desbloqueo: form.pin,
-          detalles_esteticos: form.detalles,
+          detalles_esteticos: detallesCompilados, // 👈 Enviamos el texto compilado
           falla_reportada: form.falla,
           costo_total: parseFloat(form.costo_total), //
           anticipo: parseFloat(form.anticipo),
@@ -200,56 +206,66 @@ export default function NuevoRegistro() {
             </div>
           )}
 
-          {/* EQUIPO */}
+         {/* EQUIPO */}
           <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100">
             <h3 className="text-sm font-black uppercase text-blue-600 mb-4 tracking-wider">Detalles del Equipo</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Marca</label>
-                <input type="text" required
-                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none" 
-                  onChange={e => setForm({...form, marca: e.target.value})} />
+                <label className="block text-xs font-bold text-slate-700 mb-2">Marca</label>
+                <input type="text" required className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, marca: e.target.value})} />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Modelo</label>
-                <input type="text" required
-                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none" 
-                  onChange={e => setForm({...form, modelo: e.target.value})} />
+                <label className="block text-xs font-bold text-slate-700 mb-2">Modelo</label>
+                <input type="text" required className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, modelo: e.target.value})} />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">IMEI / Serie</label>
-                <input type="text" required
-                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none" 
-                  onChange={e => setForm({...form, imei: e.target.value})} />
+                <label className="block text-xs font-bold text-slate-700 mb-2">Color</label>
+                <input type="text" required className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, color: e.target.value})} />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">PIN / Patrón</label>
-                <input type="text"
-                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none" 
-                  placeholder="Ej. 1234 o N/A"
-                  onChange={e => setForm({...form, pin: e.target.value})} />
+                {/* IMEI ya NO es obligatorio */}
+                <label className="block text-xs font-bold text-slate-700 mb-2">IMEI / Serie (Opcional)</label>
+                <input type="text" className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" onChange={e => setForm({...form, imei: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">PIN / Patrón</label>
+                <input type="text" className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-2.5 text-sm font-medium outline-none" placeholder="Opcional" onChange={e => setForm({...form, pin: e.target.value})} />
+              </div>
+            </div>
+
+            {/* ✨ CHECKBOXES (Accesorios y Estado) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5 bg-white p-4 rounded-xl border border-slate-200">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b pb-1">¿Qué deja el cliente?</p>
+                <div className="grid grid-cols-2 gap-3 text-sm font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-blue-600" onChange={e => setChecks({...checks, protector: e.target.checked})}/> Protector</label>
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-blue-600" onChange={e => setChecks({...checks, cargador: e.target.checked})}/> Cargador</label>
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-blue-600" onChange={e => setChecks({...checks, sd: e.target.checked})}/> Memoria SD</label>
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-blue-600" onChange={e => setChecks({...checks, sim: e.target.checked})}/> SIM</label>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b pb-1">Estado de Ingreso</p>
+                <div className="flex gap-4 text-sm font-bold text-slate-700">
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-red-500" onChange={e => setChecks({...checks, reparado: e.target.checked})}/> Pre-Reparado</label>
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-red-500" onChange={e => setChecks({...checks, mojado: e.target.checked})}/> Mojado</label>
+                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="w-4 h-4 accent-red-500" onChange={e => setChecks({...checks, apagado: e.target.checked})}/> Apagado</label>
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Falla Reportada</label>
-                <textarea required rows={3}
-                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none resize-none"
-                  placeholder="¿Qué le duele al equipo?"
-                  onChange={e => setForm({...form, falla: e.target.value})}></textarea>
+                <textarea required rows={2} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium outline-none resize-none" placeholder="Ej. Pantalla quebrada" onChange={e => setForm({...form, falla: e.target.value})}></textarea>
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Condiciones Estéticas</label>
-                <textarea required rows={3}
-                  className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium text-slate-900 outline-none resize-none"
-                  placeholder="Rayones, golpes, pantalla estrellada, etc."
-                  onChange={e => setForm({...form, detalles: e.target.value})}></textarea>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Observaciones Extra</label>
+                <textarea rows={2} className="w-full bg-white border-2 border-slate-200 focus:border-blue-600 focus:ring-0 rounded-xl p-3 font-medium outline-none resize-none" placeholder="Opcional. Rayones, golpes, etc." onChange={e => setForm({...form, detalles: e.target.value})}></textarea>
               </div>
             </div>
           </div>
-
          {/* ✨ PRESUPUESTO, ANTICIPO Y BOTÓN */}
           <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center gap-6">
             

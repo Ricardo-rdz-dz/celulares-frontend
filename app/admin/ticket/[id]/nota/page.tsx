@@ -46,79 +46,96 @@ export default function NotaImpresion() {
         </button>
       </div>
 
-      {/* RECUADRO DE DISEÑO DE NOTA */}
-      <div className="border border-black p-6 space-y-6">
+      {/* RECUADRO DE DISEÑO DE NOTA FÍSICA (TIPO TALONARIO) */}
+      <div className="border border-black p-6 space-y-4 relative">
         
-        {/* ENCABEZADO */}
-        <div className="flex justify-between items-start border-b border-black pb-4">
-          <div>
-            <h1 className="text-lg font-black tracking-tight uppercase">MOVILPLACE</h1>
-            <p className="text-[10px] text-gray-600 mt-0.5">Servicio Técnico Especializado en Celulares</p>
-          </div>
-          <div className="text-right">
-            <h2 className="text-sm font-bold">ORDEN DE SERVICIO</h2>
-            <p className="text-base font-black font-mono">FOLIO: #{folio}</p>
-            <p className="text-[10px] text-gray-500 mt-1">Fecha: {new Date(ticket.created_at).toLocaleDateString()} {new Date(ticket.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-          </div>
-        </div>
-
-        {/* SECCIÓN 1: DATOS DEL CLIENTE */}
-        <div>
-          <h3 className="font-bold border-b border-gray-300 pb-0.5 mb-2 uppercase tracking-wider text-[10px] text-gray-500">1. Datos del Cliente</h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div><span className="text-gray-500 text-xs block">Nombre Completo</span> <span className="font-semibold">{ticket.clientes?.nombre}</span></div>
-            <div><span className="text-gray-500 text-xs block">Teléfono de Contacto</span> <span className="font-mono font-semibold">{ticket.clientes?.telefono}</span></div>
+        {/* ENCABEZADO: TIPO TICKET ACTUAL */}
+        <div className="text-center border-b-2 border-black pb-4 mb-2">
+          <h1 className="text-3xl font-black uppercase tracking-widest">MOVILPLACE</h1>
+          <p className="text-xs font-bold uppercase tracking-widest mt-1">Nota de Servicio</p>
+          <p className="text-[10px] text-gray-700 leading-tight mt-2">
+            Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia<br/>
+            Centro comercial Soriana Hiper
+          </p>
+          <div className="flex justify-center gap-3 text-[10px] font-bold mt-2 text-gray-800">
+            <span>Reparaciones: 686 172 0406</span> | 
+            <span>Desbloqueos: 686 168 7729</span> | 
+            <span>Ventas: 686 176 4066</span>
           </div>
         </div>
 
-        {/* SECCIÓN 2: DATOS DEL EQUIPO */}
-        <div>
-          <h3 className="font-bold border-b border-gray-300 pb-0.5 mb-2 uppercase tracking-wider text-[10px] text-gray-500">2. Especificaciones del Equipo</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <div><span className="text-gray-400 block">Marca / Modelo</span> <span className="font-bold">{ticket.equipos?.marca} {ticket.equipos?.modelo}</span></div>
-            <div><span className="text-gray-400 block">IMEI / Serie</span> <span className="font-mono">{ticket.equipos?.imei_o_serie || 'N/A'}</span></div>
-            <div><span className="text-gray-400 block">PIN / Patrón</span> <span className="font-mono font-semibold">{ticket.equipos?.pin_desbloqueo || 'N/A'}</span></div>
-          </div>
-          <div className="mt-2 bg-gray-50 p-2 border border-gray-200 rounded">
-            <span className="text-gray-500 block font-medium">Detalles Estéticos de Recepción:</span>
-            <p className="italic text-gray-700">{ticket.equipos?.detalles_esteticos || 'Sin detalles registrados'}</p>
-          </div>
+        {/* FOLIO Y FECHA */}
+        <div className="flex justify-between items-center text-xs font-bold font-mono">
+          <p className="text-sm">FOLIO: <span className="text-red-600">#{folio}</span></p>
+          <p>FECHA: {new Date(ticket.created_at).toLocaleDateString()} {new Date(ticket.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
         </div>
 
-        {/* SECCIÓN 3: DETALLE DEL SERVICIO Y FINANZAS */}
-        <div>
-          <h3 className="font-bold border-b border-gray-300 pb-0.5 mb-2 uppercase tracking-wider text-[10px] text-gray-500">3. Diagnóstico y Control de Caja</h3>
-          <div className="flex justify-between items-start gap-6">
-            <div className="flex-1 bg-gray-50 p-2 border border-gray-200 rounded">
-              <span className="text-gray-500 block font-medium">Falla Reportada:</span>
-              <p className="font-semibold text-gray-800">{ticket.falla_reportada}</p>
+        {/* DATOS DEL CLIENTE Y EQUIPO EN FORMATO COMPACTO */}
+        <div className="border border-black p-2 grid grid-cols-2 gap-2 text-[11px]">
+          <div><span className="font-bold">Cliente:</span> {ticket.clientes?.nombre}</div>
+          <div><span className="font-bold">Teléfono:</span> {ticket.clientes?.telefono}</div>
+          <div><span className="font-bold">Marca:</span> {ticket.equipos?.marca}</div>
+          <div><span className="font-bold">Modelo:</span> {ticket.equipos?.modelo}</div>
+          <div><span className="font-bold">IMEI/Serie:</span> {ticket.equipos?.imei_o_serie || 'N/A'}</div>
+          <div><span className="font-bold">Contraseña/PIN:</span> {ticket.equipos?.pin_desbloqueo || 'N/A'}</div>
+        </div>
+
+        {/* CONDICIONES ESTÉTICAS Y DE RECEPCIÓN (La cadena compilada en el paso 1) */}
+        <div className="text-[10px] bg-gray-50 border border-gray-300 p-2 leading-tight">
+          <span className="font-bold block mb-1">CONDICIONES DE RECEPCIÓN:</span>
+          {/* Aquí se imprimirá todo el texto con los SÍ/NO de los accesorios y el color */}
+          <p className="font-mono">{ticket.equipos?.detalles_esteticos || 'No se registraron condiciones.'}</p>
+        </div>
+
+        {/* PROBLEMA Y DINERO */}
+        <div className="flex gap-4 items-stretch">
+          <div className="flex-1 border border-black p-2 text-xs">
+            <span className="font-bold block mb-1 uppercase">Problema Reportado:</span>
+            <p>{ticket.falla_reportada}</p>
+          </div>
+          
+          <div className="w-40 border border-black divide-y divide-black text-xs font-bold font-mono">
+            <div className="flex justify-between p-1.5">
+              <span>TOTAL:</span><span>${ticket.costo_total || 0}</span>
             </div>
-            <div className="w-48 border border-black divide-y divide-gray-200 text-xs font-mono">
-              <div className="flex justify-between p-1.5"><span>Costo Total:</span><span className="font-bold">${ticket.costo_total || 0}</span></div>
-              <div className="flex justify-between p-1.5 bg-gray-50"><span>Anticipo:</span><span className="font-bold text-green-700">-${ticket.anticipo || 0}</span></div>
-              <div className="flex justify-between p-1.5 font-bold text-sm bg-gray-100"><span>Resta pagar:</span><span>${saldoRestante}</span></div>
+            <div className="flex justify-between p-1.5 bg-gray-100">
+              <span>ANTICIPO:</span><span>${ticket.anticipo || 0}</span>
+            </div>
+            <div className="flex justify-between p-1.5 text-sm bg-gray-200">
+              <span>RESTA:</span><span>${saldoRestante}</span>
             </div>
           </div>
         </div>
 
-        {/* SECCIÓN 4: PÁRRAFO DE CLÁUSULAS (Esencial para notas físicas) */}
-        <div className="text-[9px] text-gray-500 leading-tight border border-dashed p-3 space-y-1">
-          <p className="font-bold text-black uppercase">Términos del Servicio Técnico:</p>
-          <p>1. Todo equipo se recibe para revisión y diagnóstico. MovilPlace no se hace responsable por fallas ocultas no reportadas al momento de la recepción.</p>
-          <p>2. Transcurridos 15 días naturales a partir de la fecha de aviso de entrega, si el equipo no es reclamado, la empresa no se hace responsable por la integridad del mismo.</p>
+        {/* CLÁUSULAS LEGALES EXACTAS */}
+        <div className="text-[9px] border border-black p-2 mt-4 space-y-1 text-justify font-medium">
+          <p>• Usted tiene un máximo de 15 días para recoger su equipo, de lo contrario pasará a ser propiedad de la empresa.</p>
+          <p>• Teléfonos golpeados y mojados no tienen garantía.</p>
+          <p>• Garantía de 15 días sobre la misma falla.</p>
+          <p>• Toda revisión tiene un costo de $100.00 MXN.</p>
+          <p className="font-bold text-center mt-1 uppercase underline">Recuerde retirar su memoria SD y tarjeta SIM.</p>
         </div>
 
-        {/* SECCIÓN 5: FIRMAS EN RECONOCIMIENTO */}
-        <div className="pt-8 grid grid-cols-2 gap-12 text-center">
+        {/* ZONA DE PROMOCIÓN DE REFERIDOS */}
+        {ticket.clientes?.codigo_referido && (
+          <div className="p-2 border border-black border-dashed bg-gray-100 text-center">
+            <p className="text-[10px] font-bold uppercase mb-1">🎁 ¡Gana Saldo a Favor!</p>
+            <p className="text-[9px] text-gray-700 leading-tight">Comparte este código con un amigo. Él recibe un descuento y tú ganas saldo en tu próxima visita:</p>
+            <p className="text-sm font-black font-mono tracking-widest mt-1 bg-white border border-black inline-block px-3 py-0.5">
+              {ticket.clientes.codigo_referido}
+            </p>
+          </div>
+        )}
+
+        {/* FIRMAS */}
+        <div className="pt-10 grid grid-cols-2 gap-10 text-center">
           <div>
-            <div className="border-b border-black w-44 mx-auto h-12"></div>
-            <p className="text-[10px] font-bold mt-1 text-gray-700">Firma del Cliente</p>
-            <p className="text-[8px] text-gray-400">Acepto los términos de recepción</p>
+            <div className="border-b border-black w-full mx-auto h-12"></div>
+            <p className="text-[10px] font-bold mt-1 uppercase">Firma Cliente Satisfecho</p>
           </div>
           <div>
-            <div className="border-b border-black w-44 mx-auto h-12"></div>
-            <p className="text-[10px] font-bold mt-1 text-gray-700">Firma Técnico Receptor</p>
-            <p className="text-[8px] text-gray-400">Equipo verificado y guardado</p>
+            <div className="border-b border-black w-full mx-auto h-12"></div>
+            <p className="text-[10px] font-bold mt-1 uppercase">Firma del Asesor</p>
           </div>
         </div>
 

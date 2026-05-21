@@ -399,7 +399,7 @@ export default function TicketDetail() {
             onClick={() => router.push(`/admin/ticket/${ticket.id}/nota`)}
             className="w-full mt-3 bg-white hover:bg-slate-50 text-slate-800 font-bold py-2.5 px-4 rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-2 text-sm shadow-sm"
           >
-            <span>🖨️</span> Imprimir Nota de Recepción
+            <span>🖨️</span> Imprimir Nota de Servicio
           </button>
 <button 
     onClick={() => cambiarEstado('RECIBIDO')}
