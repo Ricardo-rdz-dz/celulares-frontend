@@ -198,6 +198,12 @@ const handleCerrarSesion = () => {
             >
               Métricas y KPIs
             </button>
+            <button
+  onClick={() => router.push('/admin/finanzas')}
+  className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-200 hover:bg-slate-700/80 shadow-sm"
+>
+  Módulo Finanzas
+</button>
 
           </div>
         </div>
