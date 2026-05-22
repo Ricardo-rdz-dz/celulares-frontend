@@ -135,6 +135,10 @@ const handleCerrarSesion = () => {
           <div className="text-center xl:text-left shrink-0">
             <h1 className="text-2xl font-black tracking-wide uppercase">Movil<span className="text-red-500">Place</span></h1>
             <p className="text-slate-400 text-sm">Panel de Administración</p>
+                {/* 2. COLOCAR EL WIDGET AQUÍ (Arriba de todo) */}
+        <div className="mb-10">
+          <PuntoEquilibrioWidget />
+        </div>
           </div>
           
           {/* BOTONES EN GRID (Cuadrícula simétrica y colores sutiles) */}
@@ -226,10 +230,7 @@ const handleCerrarSesion = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
               />
             </div>
-            {/* 2. COLOCAR EL WIDGET AQUÍ (Arriba de todo) */}
-        <div className="mb-10">
-          <PuntoEquilibrioWidget />
-        </div>
+        
 
             {/* ✨ Filtro de Tiempo Desplegable */}
             <div className="w-full sm:w-auto">
