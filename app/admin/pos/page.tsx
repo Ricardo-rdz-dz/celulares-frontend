@@ -25,8 +25,9 @@ export default function PuntoDeVenta() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`);
         const data = await res.json();
-        // Filtramos para asegurar que no traiga errores si la BD está vacía
-        setInventario(Array.isArray(data) ? data : []);
+       // ✨ SOLUCIÓN 1: Le decimos que los datos vienen dentro de "productos"
+        const listaProductos = data.productos || (Array.isArray(data) ? data : []);
+        setInventario(listaProductos);
       } catch (err) {
         console.error("Error al cargar el inventario visual", err);
       }
@@ -74,7 +75,8 @@ export default function PuntoDeVenta() {
   );
 
   // Orden exacto solicitado
-  const categoriasOrdenadas = ['Celulares', 'Tablets', 'Smartwatch', 'Audífonos', 'Laptops'];
+  // ✨ SOLUCIÓN 2: Agregamos cómo se llaman realmente en tu BD para que no los oculte
+  const categoriasOrdenadas = ['Celulares', 'Tablets', 'Smartwatch', 'Audífonos', 'Laptops', 'DISPOSITIVO', 'REFACCION'];
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center py-12 px-6">
