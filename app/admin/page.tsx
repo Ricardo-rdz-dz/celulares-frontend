@@ -100,88 +100,107 @@ const handleCerrarSesion = () => {
   });
 
   return (
-  <div className="min-h-screen bg-gray-100">
-    <header className="bg-slate-900 text-white border-b-4 border-red-600 shadow-md">
-      {/* BARRA UTILITARIA SUPERIOR (Para Usuario y Logout) */}
-      <div className="bg-slate-950 px-6 py-2 flex justify-end items-center gap-4 border-b border-slate-800 text-xs">
-        {usuarioActivo && (
-          <div className="flex items-center gap-3">
-            <span className="text-slate-500">Sesión activa:</span>
-            <button 
-              onClick={() => router.push('/admin/perfil')}
-              className="font-bold text-slate-300 hover:text-white underline underline-offset-4 transition-colors flex items-center gap-1"
-              title="Ir a mi perfil"
-            >
-              👤 {usuarioActivo.nombre} ({usuarioActivo.rol})
-            </button>
-           
-            <span className="text-slate-700">|</span>
-            <button 
-              onClick={handleCerrarSesion}
-              className="text-red-400 hover:text-red-500 font-semibold transition-colors"
-            >
-              Cerrar Sesión
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* CONTENIDO PRINCIPAL DEL HEADER */}
-      <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black tracking-wide uppercase">Movil<span className="text-red-500">Place</span></h1>
-          <p className="text-slate-400 text-sm">Panel de Administración</p>
-        </div>
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-slate-900 text-white border-b-4 border-red-600 shadow-md">
         
-        <div className="flex flex-wrap justify-center gap-3">
-          <button onClick={() => router.push('/admin/clientes')} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm">
-            <span>👥</span> CRM Clientes
-          </button>
-           {/* ✨ NUEVO BOTÓN: Acceso a Métricas */}
-            <button 
-              onClick={() => router.push('/admin/metricas')}
-              className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
-              title="Ver Dashboard de KPIs"
-            >
-              <span>📊</span> Métricas
-            </button>
-            <button 
-  onClick={() => router.push('/admin/refacciones/venta')} /* 👈 Apunta directo al nuevo mostrador */
-  className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
-  title="Ir al Mostrador de Refacciones"
->
-  🛠️ Venta de Refacciones
-</button>
-{/* 2. Botón para REGISTRAR Refacciones (El de la cámara) */}
-  <button 
-    onClick={() => router.push('/admin/refacciones')}
-    className="bg-blue-900 hover:bg-blue-800 text-white px-5 py-4 rounded-xl font-bold border border-blue-800 transition-all flex items-center gap-3 text-sm shadow-sm"
-  >
-    <span className="text-xl">📦</span> Alta de Refacciones
-  </button>
+        {/* BARRA UTILITARIA SUPERIOR (Para Usuario y Logout) */}
+        <div className="bg-slate-950 px-6 py-2 flex justify-end items-center gap-4 border-b border-slate-800 text-xs">
+          {usuarioActivo && (
+            <div className="flex items-center gap-3">
+              <span className="text-slate-500">Sesión activa:</span>
               <button 
-              onClick={() => router.push('/admin/pos')}
-              className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
-              title="Ver Dashboard de KPIs"
-            >
-              <span></span> Ventas
-            </button>
-            <button 
-  onClick={() => router.push('/admin/inventario')} 
-  className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
-  title="Control de refacciones y equipos para la venta"
->
-  <span>📦</span> Almacén
-</button>
-          <button onClick={() => router.push('/admin/catalogo')} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm">
-            <span>⚙️</span> Precios
-          </button>
-          <button onClick={() => router.push('/admin/nuevo')} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 text-sm">
-            <span className="text-xl">+</span> Recibir Equipo
-          </button>
+                onClick={() => router.push('/admin/perfil')}
+                className="font-bold text-slate-300 hover:text-white underline underline-offset-4 transition-colors flex items-center gap-1"
+                title="Ir a mi perfil"
+              >
+                👤 {usuarioActivo.nombre} ({usuarioActivo.rol})
+              </button>
+              
+              <span className="text-slate-700">|</span>
+              <button 
+                onClick={handleCerrarSesion}
+                className="text-red-400 hover:text-red-500 font-semibold transition-colors"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          )}
         </div>
-      </div>
-    </header>
+
+        {/* CONTENIDO PRINCIPAL DEL HEADER */}
+        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col xl:flex-row justify-between items-center gap-6">
+          
+          {/* LOGOTIPO */}
+          <div className="text-center xl:text-left shrink-0">
+            <h1 className="text-2xl font-black tracking-wide uppercase">Movil<span className="text-red-500">Place</span></h1>
+            <p className="text-slate-400 text-sm">Panel de Administración</p>
+          </div>
+          
+          {/* BOTONES EN GRID (Cuadrícula simétrica y colores sutiles) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full xl:w-auto">
+            
+            {/* -- ÁREA DE VENTAS -- */}
+            <button
+              onClick={() => router.push('/admin/pos')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-emerald-900/30 border-emerald-800/50 text-emerald-100 hover:bg-emerald-800/50 shadow-sm"
+            >
+              Venta Equipos
+            </button>
+
+            <button
+              onClick={() => router.push('/admin/refacciones/venta')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-teal-900/30 border-teal-800/50 text-teal-100 hover:bg-teal-800/50 shadow-sm"
+            >
+              Venta Refacciones
+            </button>
+
+            {/* -- ÁREA DE TALLER E INVENTARIO -- */}
+            <button
+              onClick={() => router.push('/admin/nuevo')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-blue-900/30 border-blue-800/50 text-blue-100 hover:bg-blue-800/50 shadow-sm"
+            >
+              Recibir Equipo
+            </button>
+
+            <button
+              onClick={() => router.push('/admin/refacciones')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-indigo-900/30 border-indigo-800/50 text-indigo-100 hover:bg-indigo-800/50 shadow-sm"
+            >
+              Alta Refacciones
+            </button>
+
+            <button
+              onClick={() => router.push('/admin/inventario')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-purple-900/30 border-purple-800/50 text-purple-100 hover:bg-purple-800/50 shadow-sm"
+            >
+              Almacén Equipos
+            </button>
+
+            <button
+              onClick={() => router.push('/admin/catalogo')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-amber-900/30 border-amber-800/50 text-amber-100 hover:bg-amber-800/50 shadow-sm"
+            >
+              Catálogo Precios
+            </button>
+
+            {/* -- ÁREA DE ADMINISTRACIÓN -- */}
+            <button
+              onClick={() => router.push('/admin/clientes')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-rose-900/30 border-rose-800/50 text-rose-100 hover:bg-rose-800/50 shadow-sm"
+            >
+              CRM Clientes
+            </button>
+
+            <button
+              onClick={() => router.push('/admin/metricas')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-200 hover:bg-slate-700/80 shadow-sm"
+            >
+              Métricas y KPIs
+            </button>
+
+          </div>
+        </div>
+      </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         
