@@ -145,6 +145,13 @@ const handleCerrarSesion = () => {
             >
               <span>📊</span> Métricas
             </button>
+            <button 
+  onClick={() => router.push('/admin/refacciones/venta')} /* 👈 Apunta directo al nuevo mostrador */
+  className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
+  title="Ir al Mostrador de Refacciones"
+>
+  🛠️ Venta de Refacciones
+</button>
               <button 
               onClick={() => router.push('/admin/pos')}
               className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
