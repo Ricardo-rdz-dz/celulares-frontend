@@ -237,7 +237,7 @@ const handleCerrarSesion = () => {
 
           {/* Chips de Estados */}
           <div className="flex flex-wrap gap-2 w-full lg:w-auto justify-start lg:justify-end">
-            {['TODOS', 'RECIBIDO', 'DIAGNOSTICO', 'ESPERANDO_PIEZA', 'LISTO_PARA_ENTREGA'].map((estado) => (
+            {['TODOS', 'RECIBIDO', 'DIAGNOSTICO', 'ESPERANDO_PIEZA', 'ENTREGADO'].map((estado) => (
               <button
                 key={estado}
                 onClick={() => setFiltroEstado(estado)}
