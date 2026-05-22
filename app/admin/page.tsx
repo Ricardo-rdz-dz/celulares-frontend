@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PuntoEquilibrioWidget from '../components/PuntoEquilibrioWidget';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -219,6 +220,10 @@ const handleCerrarSesion = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
               />
             </div>
+            {/* 2. COLOCAR EL WIDGET AQUÍ (Arriba de todo) */}
+        <div className="mb-10">
+          <PuntoEquilibrioWidget />
+        </div>
 
             {/* ✨ Filtro de Tiempo Desplegable */}
             <div className="w-full sm:w-auto">
