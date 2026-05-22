@@ -152,6 +152,13 @@ const handleCerrarSesion = () => {
 >
   🛠️ Venta de Refacciones
 </button>
+{/* 2. Botón para REGISTRAR Refacciones (El de la cámara) */}
+  <button 
+    onClick={() => router.push('/admin/refacciones')}
+    className="bg-blue-900 hover:bg-blue-800 text-white px-5 py-4 rounded-xl font-bold border border-blue-800 transition-all flex items-center gap-3 text-sm shadow-sm"
+  >
+    <span className="text-xl">📦</span> Alta de Refacciones
+  </button>
               <button 
               onClick={() => router.push('/admin/pos')}
               className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-3 rounded-xl font-bold border border-slate-700 transition-all flex items-center gap-2 text-sm shadow-sm"
