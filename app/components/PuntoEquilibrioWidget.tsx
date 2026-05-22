@@ -39,7 +39,7 @@ export default function PuntoEquilibrioWidget() {
             Sostenibilidad Operativa
           </h3>
           <p className="text-lg font-bold text-slate-100">
-            {cubierto ? '🎉 Gastos Fijos Cubiertos' : '📉 Punto de Equilibrio Mensual'}
+            {cubierto ? ' Gastos Fijos Cubiertos' : ' Punto de Equilibrio Mensual'}
           </p>
         </div>
         <div className="text-right sm:text-right">
