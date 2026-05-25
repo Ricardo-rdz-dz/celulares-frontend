@@ -9,7 +9,7 @@ export default function TiendaEquipos() {
   const [mostrarCarrito, setMostrarCarrito] = useState(false);
   const [busqueda, setBusqueda] = useState('');
 
-  // 1. Cargar el inventario
+  // 1. Cargar el inventario (Solo Dispositivos con Stock)
   useEffect(() => {
     const cargarInventario = async () => {
       try {
@@ -17,8 +17,10 @@ export default function TiendaEquipos() {
         const data = await res.json();
         
         if (data.success && data.productos) {
-          // Filtramos solo los que tienen stock
-          const disponibles = data.productos.filter((item: any) => item.cantidad > 0);
+          // ✨ FILTRO ESTRICTO: Solo stock > 0 y tipo === 'Dispositivo'
+          const disponibles = data.productos.filter((item: any) => 
+            item.cantidad > 0 && item.tipo === 'Dispositivo'
+          );
           setEquipos(disponibles);
           setEquiposFiltrados(disponibles);
         }
@@ -45,7 +47,7 @@ export default function TiendaEquipos() {
       const existe = prev.find(item => item.id === equipo.id);
       if (existe) {
         if (existe.cantidad_carrito >= equipo.cantidad) {
-          alert('No hay más stock de este equipo exacto.');
+          alert('Has alcanzado el límite de stock disponible para este equipo exacto.');
           return prev;
         }
         return prev.map(item => item.id === equipo.id ? { ...item, cantidad_carrito: item.cantidad_carrito + 1 } : item);
@@ -53,7 +55,7 @@ export default function TiendaEquipos() {
         return [...prev, { ...equipo, cantidad_carrito: 1 }];
       }
     });
-    setMostrarCarrito(true); // Abrir el carrito automáticamente al agregar un celular
+    setMostrarCarrito(true); 
   };
 
   const eliminarDelCarrito = (id: string) => {
@@ -66,108 +68,102 @@ export default function TiendaEquipos() {
   const procesarPedidoWhatsApp = () => {
     if (carrito.length === 0) return;
 
-    let mensaje = `👋 ¡Hola MovilPlace! Me interesa adquirir el siguiente equipo:\n\n`;
+    let mensaje = `Buen día MovilPlace. Me interesa adquirir el siguiente equipo:\n\n`;
     
     carrito.forEach(item => {
-      mensaje += `📱 ${item.cantidad_carrito}x ${item.nombre} \n   SKU: ${item.sku}\n   Precio: $${item.precio_venta}\n\n`;
+      mensaje += `▪️ ${item.cantidad_carrito}x ${item.nombre}\n   SKU: ${item.sku}\n   Precio: $${item.precio_venta}\n\n`;
     });
 
-    mensaje += `*TOTAL APROXIMADO: $${totalCarrito.toFixed(2)}*\n\n¿Aún lo tienen disponible en tienda?`;
+    mensaje += `*TOTAL ESTIMADO: $${totalCarrito.toFixed(2)}*\n\nMe gustaría confirmar la disponibilidad y el proceso de compra.`;
 
     const url = `https://wa.me/526861764066?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-20">
+    <div className="min-h-screen bg-white text-gray-900 font-sans pb-24">
       
-      {/* NAVBAR PÚBLICO */}
-      <nav className="bg-slate-950 text-white p-4 sticky top-0 z-40 shadow-xl flex justify-between items-center">
+      {/* NAVBAR MINIMALISTA PREMIUM */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 p-4 sm:px-8 flex justify-between items-center bg-white/90 backdrop-blur-md">
         <div>
-          <h1 className="text-2xl font-black uppercase tracking-widest">MOVILPLACE</h1>
-          <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Tienda de Equipos Oficial</p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-black">MOVILPLACE</h1>
+          <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest">Catálogo de Dispositivos</p>
         </div>
         <button 
           onClick={() => setMostrarCarrito(true)}
-          className="relative bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors active:scale-95"
+          className="relative p-3 text-2xl hover:bg-gray-100 transition-colors rounded-lg active:scale-95"
         >
           🛒
           {carrito.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs font-black w-5 h-5 flex items-center justify-center rounded-full shadow-lg">
+            <span className="absolute top-1 right-1 bg-black text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">
               {carrito.length}
             </span>
           )}
         </button>
       </nav>
 
-      {/* CABECERA Y BUSCADOR */}
-      <div className="bg-slate-900 pb-10 pt-6 px-4 rounded-b-[2rem] shadow-sm">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-white text-3xl font-black mb-4">¿Qué equipo buscas?</h2>
-          <div className="relative">
-            <span className="absolute left-4 top-3.5 text-slate-400 text-lg">🔍</span>
-            <input 
-              type="text" 
-              placeholder="Buscar por marca, modelo o SKU (Ej. iPhone 13 Pro Max)..." 
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full bg-white rounded-2xl py-4 pl-12 pr-4 text-slate-800 font-bold outline-none focus:ring-4 focus:ring-blue-500/50 shadow-lg"
-            />
-          </div>
+      {/* CABECERA Y BUSCADOR (Diseño limpio y espacioso) */}
+      <div className="pt-10 pb-8 px-4 sm:px-8 max-w-7xl mx-auto">
+        <h2 className="text-4xl sm:text-5xl font-black text-black mb-6 tracking-tight">Equipos Disponibles</h2>
+        <div className="relative max-w-3xl">
+          <span className="absolute left-5 top-4 text-gray-400 text-xl">🔍</span>
+          <input 
+            type="text" 
+            placeholder="Buscar modelo, marca o SKU..." 
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-14 pr-6 text-black text-lg font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all"
+          />
         </div>
       </div>
 
       {/* GRID DE DISPOSITIVOS */}
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 mt-[-1rem]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8">
         {loading ? (
-          <div className="text-center font-bold text-xl text-slate-400 mt-20 animate-pulse">Cargando catálogo de equipos...</div>
+          <div className="text-center font-bold text-xl text-gray-400 mt-20 animate-pulse">Sincronizando inventario...</div>
         ) : equiposFiltrados.length === 0 ? (
-          <div className="text-center font-bold text-lg text-slate-500 mt-20 bg-white p-10 rounded-3xl shadow-sm">
-            No se encontraron equipos con esa descripción.
+          <div className="text-center font-medium text-lg text-gray-500 mt-20 py-20 border border-gray-200 border-dashed rounded-xl">
+            No se encontraron dispositivos que coincidan con tu búsqueda.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
             {equiposFiltrados.map((equipo) => (
-              <div key={equipo.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col group">
+              <div key={equipo.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col group hover:border-black transition-colors duration-300">
                 
-                {/* Zona de Imagen o Placeholder (Espacio más grande para celulares) */}
-                <div className="h-56 bg-slate-100 flex flex-col items-center justify-center relative overflow-hidden border-b border-slate-100">
+                {/* Zona de Imagen (Aspect ratio grande y cuadrado para lucir el equipo) */}
+                <div className="aspect-[4/3] sm:aspect-square bg-gray-50 flex flex-col items-center justify-center relative overflow-hidden border-b border-gray-100">
                   {equipo.imagen_url ? (
-                    <img src={equipo.imagen_url} alt={equipo.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={equipo.imagen_url} alt={equipo.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                   ) : (
-                    <div className="text-center">
-                      <span className="text-6xl mb-2 block">📱</span>
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Foto no disponible</span>
+                    <div className="text-center text-gray-300">
+                      <span className="text-7xl block mb-4 drop-shadow-sm">📱</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Imagen Pendiente</span>
                     </div>
                   )}
-                  {/* Badges Flotantes */}
-                  <div className="absolute top-4 left-4 flex gap-2">
-                    <span className="bg-slate-900 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-md uppercase">
-                      {equipo.tipo || 'Equipo'}
-                    </span>
+                  {/* Badge Elegante */}
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur border border-gray-200 text-black text-[10px] font-black px-3 py-1 uppercase tracking-widest shadow-sm">
+                    Stock: {equipo.cantidad}
                   </div>
                 </div>
 
                 {/* Info del Celular */}
-                <div className="p-6 flex flex-col flex-grow justify-between bg-white">
-                  <div>
-                    <div className="flex justify-between items-start gap-4 mb-2">
-                      <h3 className="font-black text-lg text-slate-800 leading-tight">{equipo.nombre}</h3>
-                    </div>
-                    <p className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 inline-block px-2 py-1 rounded">SKU: {equipo.sku}</p>
+                <div className="p-6 sm:p-8 flex flex-col flex-grow justify-between bg-white">
+                  <div className="mb-8">
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ref: {equipo.sku}</p>
+                    <h3 className="font-black text-2xl text-black leading-tight tracking-tight">{equipo.nombre}</h3>
                   </div>
                   
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col gap-3">
-                    <div className="flex justify-between items-end">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Precio de Venta</span>
-                      <span className="text-2xl font-black text-emerald-600">${parseFloat(equipo.precio_venta).toFixed(2)}</span>
+                  <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Precio Especial</span>
+                      <span className="text-3xl font-black text-black tracking-tighter">${parseFloat(equipo.precio_venta).toFixed(2)}</span>
                     </div>
                     
                     <button 
                       onClick={() => agregarAlCarrito(equipo)}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-md hover:shadow-blue-500/25"
+                      className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white font-bold py-4 px-8 text-sm uppercase tracking-wider active:scale-95 transition-all"
                     >
-                      🛒 Me interesa
+                      Lo Quiero
                     </button>
                   </div>
                 </div>
@@ -178,39 +174,41 @@ export default function TiendaEquipos() {
         )}
       </div>
 
-      {/* MODAL / SIDEBAR DEL CARRITO */}
+      {/* SIDEBAR DEL CARRITO PREMIUM */}
       {mostrarCarrito && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col animate-slideInRight">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white w-full max-w-lg h-full shadow-2xl flex flex-col animate-slideInRight border-l border-gray-200">
             
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-white">
               <div>
-                <h2 className="text-xl font-black uppercase text-slate-800">Equipos de Interés</h2>
-                <p className="text-xs text-slate-500 font-bold">Reserva directa por WhatsApp</p>
+                <h2 className="text-2xl font-black tracking-tight text-black">Cesta de Equipos</h2>
               </div>
-              <button onClick={() => setMostrarCarrito(false)} className="bg-slate-100 hover:bg-slate-200 text-slate-600 w-10 h-10 rounded-full font-bold flex items-center justify-center transition-colors">✖</button>
+              <button onClick={() => setMostrarCarrito(false)} className="text-gray-400 hover:text-black text-2xl transition-colors">✖</button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
               {carrito.length === 0 ? (
-                <div className="text-center text-slate-400 mt-10 font-bold flex flex-col items-center">
-                  <span className="text-4xl mb-2 block">🛒</span>
-                  Aún no has seleccionado ningún equipo.
+                <div className="text-center text-gray-400 mt-20 flex flex-col items-center">
+                  <span className="text-5xl mb-4 block opacity-50">🛒</span>
+                  <p className="font-medium text-lg">Tu cesta está vacía.</p>
                 </div>
               ) : (
                 carrito.map((item) => (
-                  <div key={item.id} className="flex gap-4 bg-white border border-slate-100 shadow-sm rounded-2xl p-3 items-center">
-                    <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-2xl">
+                  <div key={item.id} className="flex gap-4 bg-white border border-gray-200 p-4 items-center">
+                    <div className="w-20 h-20 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center text-3xl border border-gray-100">
                       {item.imagen_url ? <img src={item.imagen_url} className="w-full h-full object-cover" /> : '📱'}
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-sm leading-tight text-slate-800 mb-1">{item.nombre}</h4>
-                      <p className="text-[10px] text-slate-400 font-mono mb-2">SKU: {item.sku}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">SKU: {item.sku}</p>
+                      <h4 className="font-black text-base leading-tight text-black mb-2 truncate">{item.nombre}</h4>
                       <div className="flex justify-between items-center">
-                        <span className="font-black text-emerald-600">${parseFloat(item.precio_venta).toFixed(2)}</span>
+                        <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1">Cant: {item.cantidad_carrito}</span>
+                        <span className="font-black text-lg text-black">${parseFloat(item.precio_venta).toFixed(2)}</span>
                       </div>
                     </div>
-                    <button onClick={() => eliminarDelCarrito(item.id)} className="text-red-500 hover:bg-red-50 w-10 h-10 flex items-center justify-center rounded-xl transition-colors">🗑️</button>
+                    <button onClick={() => eliminarDelCarrito(item.id)} className="text-gray-400 hover:text-red-500 p-2 transition-colors">
+                      <span className="text-xl">🗑️</span>
+                    </button>
                   </div>
                 ))
               )}
@@ -218,21 +216,21 @@ export default function TiendaEquipos() {
 
             {/* ZONA DE CHECKOUT */}
             {carrito.length > 0 && (
-              <div className="p-6 border-t border-slate-100 bg-white">
-                <div className="flex justify-between items-center mb-6">
-                  <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total a Pagar:</span>
-                  <span className="text-3xl font-black text-slate-800">${totalCarrito.toFixed(2)}</span>
+              <div className="p-8 border-t border-gray-200 bg-white">
+                <div className="flex justify-between items-end mb-8">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Estimado</span>
+                  <span className="text-4xl font-black text-black tracking-tighter">${totalCarrito.toFixed(2)}</span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <button 
                     onClick={procesarPedidoWhatsApp}
-                    className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white font-black py-4 rounded-2xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2 text-base tracking-wide"
+                    className="w-full bg-black hover:bg-gray-800 text-white font-black py-5 text-sm uppercase tracking-widest active:scale-95 transition-transform flex justify-center items-center gap-3"
                   >
-                    💬 Contactar Ventas 
+                    💬 Contactar a Ventas
                   </button>
-                  <p className="text-center text-[10px] font-bold text-slate-400 mt-2">
-                    Al presionar serás dirigido a nuestro WhatsApp para revisar disponibilidad y método de pago.
+                  <p className="text-center text-xs font-medium text-gray-400 leading-relaxed">
+                    Serás redirigido a WhatsApp para confirmar la disponibilidad exacta y los detalles de entrega.
                   </p>
                 </div>
               </div>
