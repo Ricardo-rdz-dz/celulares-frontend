@@ -1,4 +1,4 @@
-// nota ticket venta final
+// recibo final de reparacion 
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -40,26 +40,25 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
   const saldoPagado = costoTotal - anticipo;
 
   return (
-    <div className="p-4 max-w-xl mx-auto bg-white text-black font-sans bg-transparent print:p-0">
+    <div className="p-2 md:p-6 max-w-4xl w-full mx-auto bg-white text-black font-sans bg-transparent print:p-0">
       
-      {/* MAGIA CSS PARA HOJA COMPLETA */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page { margin: 1cm; size: letter portrait; }
-          body { padding: 0; }
+          body { padding: 0; -webkit-print-color-adjust: exact; }
           .print-hidden { display: none !important; }
           .hoja-completa { height: 26cm !important; }
         }
       `}} />
 
-      {/* BOTONES */}
+      {/* BOTONES DE ACCIÓN */}
       <div className="mb-4 flex gap-4 print-hidden">
         <button onClick={() => router.push('/admin')} className="border px-4 py-2 rounded">⬅️ Volver</button>
-        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold">🖨️ Imprimir Recibo</button>
+        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold">🖨️ Imprimir Recibo Completo</button>
       </div>
 
       {/* CONTENEDOR TAMAÑO CARTA */}
-      <div className="border-2 border-black p-5 hoja-completa flex flex-col relative space-y-4">
+      <div className="border-2 border-black p-6 hoja-completa flex flex-col relative space-y-4">
         
         {/* ENCABEZADO */}
         <div className="text-center border-b-2 border-black pb-3">
@@ -69,45 +68,60 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
         </div>
 
         {/* DATOS TICKET */}
-        <div className="flex justify-between font-bold text-sm">
+        <div className="flex justify-between font-bold text-sm border-b border-black pb-2">
           <p>FOLIO: #{ticket.id.toString().substring(0, 8).toUpperCase()}</p>
-          <p>FECHA: {new Date().toLocaleDateString()}</p>
+          <p>FECHA ENTREGA: {new Date().toLocaleDateString()}</p>
         </div>
 
         {/* DATOS CLIENTE Y EQUIPO */}
-        <div className="border-2 border-black p-3 text-sm space-y-1">
+        <div className="border border-black p-4 text-sm grid grid-cols-2 gap-4">
           <p><strong>CLIENTE:</strong> {ticket.clientes?.nombre.toUpperCase()}</p>
+          <p><strong>TELÉFONO:</strong> {ticket.clientes?.telefono}</p>
           <p><strong>EQUIPO:</strong> {ticket.equipos?.marca} {ticket.equipos?.modelo}</p>
-          <p><strong>MOTIVO:</strong> {ticket.falla_reportada.toUpperCase()}</p>
-          <p><strong>TRABAJO REALIZADO:</strong> <span className="italic uppercase">{ticket.diagnostico || 'Mantenimiento y reparación'}</span></p>
+          <p><strong>FALLA REPORTADA:</strong> {ticket.falla_reportada.toUpperCase()}</p>
+          <div className="col-span-2">
+            <p><strong>TRABAJO REALIZADO:</strong></p>
+            <p className="italic text-gray-800">{ticket.diagnostico || 'Mantenimiento y reparación general'}</p>
+          </div>
         </div>
 
         {/* PAGOS */}
-        <div className="border-2 border-black p-3 text-sm font-bold">
-          <div className="flex justify-between"><span>TOTAL:</span> <span>${costoTotal.toFixed(2)}</span></div>
-          <div className="flex justify-between text-gray-600"><span>ANTICIPO:</span> <span>-${anticipo.toFixed(2)}</span></div>
-          <div className="flex justify-between text-lg border-t border-black mt-2 pt-1"><span>SALDO LIQUIDADO:</span> <span>${saldoPagado > 0 ? saldoPagado.toFixed(2) : '0.00'}</span></div>
+        <div className="border-2 border-black p-4 text-sm font-bold bg-gray-50">
+          <div className="flex justify-between mb-1"><span>COSTO TOTAL DEL SERVICIO:</span> <span>${costoTotal.toFixed(2)}</span></div>
+          <div className="flex justify-between mb-1 text-gray-600"><span>ANTICIPO RECIBIDO:</span> <span>-${anticipo.toFixed(2)}</span></div>
+          <div className="flex justify-between text-lg border-t-2 border-black mt-2 pt-2"><span>SALDO LIQUIDADO:</span> <span>${saldoPagado > 0 ? saldoPagado.toFixed(2) : '0.00'}</span></div>
         </div>
 
-        {/* GARANTÍA */}
-        <div className="text-xs border-2 border-black p-3 text-justify">
-          <p className="font-bold text-center uppercase mb-1">Políticas de Garantía</p>
-          <p>• Garantía válida únicamente sobre el trabajo realizado descrito en este recibo. No aplica en equipos mojados, golpeados o intervenidos por terceros. Indispensable presentar este recibo.</p>
+        {/* POLÍTICAS DE GARANTÍA DETALLADAS */}
+        <div className="text-xs border-2 border-black p-4 text-justify space-y-2">
+          <p className="font-bold text-center uppercase border-b border-black pb-2 mb-2">Políticas de Garantía</p>
+          <p>• Se otorga una garantía de <strong>15 días</strong> sobre la reparación realizada a partir de la fecha de entrega.</p>
+          <p>• La garantía queda <strong>totalmente anulada</strong> si el dispositivo presenta signos de humedad, golpes, pantallas quebradas, rayones o cualquier daño físico posterior a la entrega.</p>
+          <p>• Usted cuenta con un plazo máximo de <strong>15 días</strong> naturales para recoger su dispositivo una vez notificado que está listo. Pasado este tiempo, MovilPlace ya no se hace responsable por el dispositivo.</p>
+          <p>• Es indispensable presentar este recibo original (físico o digital) para hacer válida cualquier reclamación.</p>
         </div>
 
-        {/* QRS Y FIRMAS (mt-auto los empuja al final) */}
-        <div className="grid grid-cols-2 gap-4 mt-auto pt-4 border-t-2 border-black">
-          <div className="flex gap-2 justify-center">
-             <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
-             <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+        {/* QRS Y FIRMAS (mt-auto los empuja al final de la hoja) */}
+        <div className="grid grid-cols-2 gap-6 mt-auto pt-4 border-t-2 border-black">
+          
+          <div className="flex gap-4 items-center">
+            <div className="text-center">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+              <p className="text-[9px] font-bold mt-1">ENCUESTA DE SATISFACCIÓN</p>
+            </div>
+            <div className="text-center">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+              <p className="text-[9px] font-bold mt-1">CALIFÍCANOS EN GOOGLE</p>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center text-[10px] font-bold">
-            <div><div className="border-b border-black h-12"></div>Firma Cliente</div>
-            <div><div className="border-b border-black h-12"></div>Firma Asesor</div>
+
+          <div className="grid grid-cols-2 gap-4 text-center text-[10px] font-bold">
+            <div><div className="border-b-2 border-black h-16"></div>Firma Cliente</div>
+            <div><div className="border-b-2 border-black h-16"></div>Firma Asesor</div>
           </div>
         </div>
 
-        <p className="text-center font-black uppercase text-lg">¡Gracias por tu preferencia!</p>
+        <p className="text-center font-black uppercase text-xl">¡Gracias por su preferencia!</p>
       </div>
     </div>
   );
