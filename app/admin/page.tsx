@@ -42,12 +42,14 @@ export default function AdminDashboard() {
       });
   }, []);
 
+// 2. AGREGA ESTE BLOQUE JUSTO DEBAJO
   useEffect(() => {
-  const userRaw = localStorage.getItem('movilplace_user');
-  if (userRaw) {
-    setUsuarioActivo(JSON.parse(userRaw));
-  }
-}, []);
+    // Esto se ejecuta cada vez que regresas a esta pantalla
+    const sesionGuardada = localStorage.getItem('usuarioActivo');
+    if (sesionGuardada) {
+      setUsuarioActivo(JSON.parse(sesionGuardada));
+    }
+  }, []);
 
 const handleCerrarSesion = () => {
   localStorage.removeItem('movilplace_token');
