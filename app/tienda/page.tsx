@@ -51,9 +51,9 @@ export default function TiendaRefacciones() {
           </div>
           
           <div className="flex gap-4 text-sm font-bold text-slate-300">
-            <span className="flex items-center gap-2">📍 Soriana Hiper</span>
+            <span className="flex items-center gap-2">📍 Soriana Hiper Calafia</span>
             <span className="text-slate-600">|</span>
-            <span className="flex items-center gap-2">📱 686 176 4066</span>
+            <span className="flex items-center gap-2">📱 686 168 77 29 Solo WhatsApp</span>
           </div>
         </div>
       </header>
