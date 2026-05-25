@@ -22,12 +22,11 @@ export default function NotaImpresion() {
       .catch((err) => console.error(err));
   }, [id]);
 
-  // Ejecutar la impresión del navegador en cuanto los datos estén listos
   useEffect(() => {
     if (ticket) {
       setTimeout(() => {
         window.print();
-      }, 500); // Pequeño delay para asegurar que el texto se renderice bien
+      }, 500);
     }
   }, [ticket]);
 
@@ -40,16 +39,22 @@ export default function NotaImpresion() {
   return (
     <div className="p-4 md:p-6 max-w-3xl w-full mx-auto bg-white text-black font-sans bg-transparent print:p-0 print:max-w-full">
       
-      {/* ✨ MAGIA CSS PARA HOJA TAMAÑO CARTA EXACTA */}
+      {/* ✨ MAGIA CSS: Forzamos la altura máxima a 24cm para que jamás toque una segunda hoja */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page { margin: 1cm; size: letter portrait; }
-          body { padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .print\\:hidden { display: none !important; }
+          .contenedor-hoja { 
+            height: 24cm !important; /* Límite estricto de altura */
+            max-height: 24cm !important;
+            overflow: hidden; 
+            page-break-inside: avoid; 
+          }
         }
       `}} />
 
-      {/* BOTÓN AUXILIAR (Oculto al imprimir) */}
+      {/* BOTÓN AUXILIAR */}
       <div className="mb-4 flex justify-between items-center border-b pb-4 print:hidden">
         <button onClick={() => router.push(`/admin/ticket/${id}`)} className="border px-4 py-2 rounded hover:bg-slate-50 font-medium">
           ⬅️ Volver a Gestión
@@ -59,13 +64,13 @@ export default function NotaImpresion() {
         </button>
       </div>
 
-      {/* RECUADRO DE DISEÑO DE NOTA FÍSICA (Abarca el 85% de la hoja para no saltar de página) */}
-      <div className="border-2 border-black p-6 flex flex-col min-h-[85vh] space-y-4 relative">
+      {/* RECUADRO PRINCIPAL: Le aplicamos la clase 'contenedor-hoja' que limitamos arriba */}
+      <div className="border-2 border-black p-5 flex flex-col contenedor-hoja relative space-y-3 h-auto min-h-[80vh]">
         
-        {/* ENCABEZADO: TIPO TICKET ACTUAL */}
-        <div className="text-center border-b-2 border-black pb-4">
+        {/* ENCABEZADO */}
+        <div className="text-center border-b-2 border-black pb-3">
           <h1 className="text-3xl font-black uppercase tracking-widest mb-1">MOVILPLACE</h1>
-          <p className="text-sm font-bold uppercase tracking-widest mt-1 bg-black text-white inline-block px-4 py-1">Nota de Servicio</p>
+          <p className="text-sm font-bold uppercase tracking-widest bg-black text-white inline-block px-4 py-1">Nota de Servicio</p>
           <p className="text-xs text-gray-700 leading-tight mt-2">
             Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia<br/>
             Centro comercial Soriana Hiper
@@ -84,7 +89,7 @@ export default function NotaImpresion() {
         </div>
 
         {/* DATOS DEL CLIENTE Y EQUIPO */}
-        <div className="border-2 border-black p-3 grid grid-cols-2 gap-3 text-sm">
+        <div className="border-2 border-black p-3 grid grid-cols-2 gap-2 text-sm">
           <div><span className="font-bold">Cliente:</span> {ticket.clientes?.nombre}</div>
           <div><span className="font-bold">Teléfono:</span> {ticket.clientes?.telefono}</div>
           <div><span className="font-bold">Marca:</span> {ticket.equipos?.marca}</div>
@@ -94,7 +99,7 @@ export default function NotaImpresion() {
         </div>
 
         {/* CONDICIONES ESTÉTICAS Y DE RECEPCIÓN */}
-        <div className="text-sm bg-gray-50 border-2 border-gray-300 p-3 leading-tight">
+        <div className="text-sm bg-gray-50 border-2 border-gray-300 p-2.5 leading-tight">
           <span className="font-bold block mb-1">CONDICIONES DE RECEPCIÓN:</span>
           <p className="font-mono">{ticket.equipos?.detalles_esteticos || 'No se registraron condiciones.'}</p>
         </div>
@@ -119,35 +124,35 @@ export default function NotaImpresion() {
           </div>
         </div>
 
-        {/* CLÁUSULAS LEGALES EXACTAS */}
-        <div className="text-xs border-2 border-black p-3 space-y-1 text-justify font-medium">
+        {/* CLÁUSULAS LEGALES */}
+        <div className="text-xs border-2 border-black p-2.5 space-y-1 text-justify font-medium">
           <p>• Usted tiene un máximo de 15 días para recoger su equipo, de lo contrario pasará a ser propiedad de la empresa.</p>
           <p>• Teléfonos golpeados y mojados no tienen garantía.</p>
           <p>• Garantía de 15 días sobre la misma falla.</p>
           <p>• Toda revisión tiene un costo de $100.00 MXN.</p>
-          <p className="font-bold text-center mt-2 uppercase underline text-sm">Recuerde retirar su memoria SD y tarjeta SIM.</p>
+          <p className="font-bold text-center mt-1.5 uppercase underline text-sm">Recuerde retirar su memoria SD y tarjeta SIM.</p>
         </div>
 
         {/* ZONA DE PROMOCIÓN DE REFERIDOS */}
         {ticket.clientes?.codigo_referido && (
-          <div className="p-3 border-2 border-black border-dashed bg-gray-100 text-center">
-            <p className="text-sm font-bold uppercase mb-1">🎁 ¡Gana Saldo a Favor!</p>
-            <p className="text-xs text-gray-700 leading-tight">Comparte este código con un amigo. Él recibe un descuento y tú ganas saldo en tu próxima visita:</p>
-            <p className="text-lg font-black font-mono tracking-widest mt-1 bg-white border-2 border-black inline-block px-4 py-1">
+          <div className="p-2 border-2 border-black border-dashed bg-gray-100 text-center">
+            <p className="text-sm font-bold uppercase mb-0.5">🎁 ¡Gana Saldo a Favor!</p>
+            <p className="text-[11px] text-gray-700 leading-tight">Comparte este código con un amigo. Él recibe un descuento y tú ganas saldo en tu próxima visita:</p>
+            <p className="text-base font-black font-mono tracking-widest mt-1 bg-white border-2 border-black inline-block px-4 py-0.5">
               {ticket.clientes.codigo_referido}
             </p>
           </div>
         )}
 
-        {/* FIRMAS (mt-auto las empuja siempre hacia abajo de la hoja) */}
-        <div className="pt-6 grid grid-cols-2 gap-10 text-center mt-auto">
+        {/* FIRMAS (Con mt-auto forzamos que se peguen al final del bloque de 24cm) */}
+        <div className="pt-4 grid grid-cols-2 gap-10 text-center mt-auto">
           <div>
-            <div className="border-b-2 border-black w-full mx-auto h-16"></div>
-            <p className="text-xs font-bold mt-2 uppercase">Firma Cliente Satisfecho</p>
+            <div className="border-b-2 border-black w-full mx-auto h-12"></div>
+            <p className="text-xs font-bold mt-1.5 uppercase">Firma Cliente Satisfecho</p>
           </div>
           <div>
-            <div className="border-b-2 border-black w-full mx-auto h-16"></div>
-            <p className="text-xs font-bold mt-2 uppercase">Firma del Asesor</p>
+            <div className="border-b-2 border-black w-full mx-auto h-12"></div>
+            <p className="text-xs font-bold mt-1.5 uppercase">Firma del Asesor</p>
           </div>
         </div>
 
