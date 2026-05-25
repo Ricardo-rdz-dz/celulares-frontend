@@ -51,26 +51,31 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
         }
       `}} />
 
-      {/* BOTONES DE ACCIÓN */}
+      {/* BOTONES */}
       <div className="mb-4 flex gap-4 print-hidden">
         <button onClick={() => router.push('/admin')} className="border px-4 py-2 rounded">⬅️ Volver</button>
-        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold">🖨️ Imprimir Recibo Completo</button>
+        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold">🖨️ Imprimir Recibo</button>
       </div>
 
-      {/* CONTENEDOR TAMAÑO CARTA */}
+      {/* CONTENEDOR CARTA COMPLETO */}
       <div className="border-2 border-black p-6 hoja-completa flex flex-col relative space-y-4">
         
-        {/* ENCABEZADO */}
-        <div className="text-center border-b-2 border-black pb-3">
-          <h1 className="text-4xl font-black uppercase tracking-wider">MovilPlace</h1>
-          <p className="text-sm font-bold uppercase tracking-widest mt-1 bg-black text-white inline-block px-4 py-1">Recibo de Servicio Final</p>
-          <p className="text-xs text-gray-700 mt-2">Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia (Soriana Hiper)</p>
+        {/* ENCABEZADO SOLICITADO */}
+        <div className="text-center border-b border-black pb-1.5 mb-0.5">
+          <h1 className="text-3xl font-black uppercase tracking-wider leading-none">MOVILPLACE</h1>
+          <p className="text-[9px] font-bold uppercase tracking-widest mt-1 bg-black text-white inline-block px-3 py-0.5">Recibo de Servicio Final</p>
+          <p className="text-[9px] text-gray-700 leading-tight mt-1">
+            Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia (Soriana Hiper)
+          </p>
+          <div className="flex justify-center gap-2 text-[8px] font-bold mt-0.5 text-gray-600">
+            <span>Ventas: 686 176 4066</span> | <span>Reparaciones: 686 172 0406</span>
+          </div>
         </div>
 
-        {/* DATOS TICKET */}
-        <div className="flex justify-between font-bold text-sm border-b border-black pb-2">
-          <p>FOLIO: #{ticket.id.toString().substring(0, 8).toUpperCase()}</p>
-          <p>FECHA ENTREGA: {new Date().toLocaleDateString()}</p>
+        {/* FOLIO Y FECHA */}
+        <div className="flex justify-between items-center text-[10px] font-bold font-mono">
+          <p>FOLIO: <span className="text-emerald-600">#{ticket.id.toString().substring(0, 8).toUpperCase()}</span></p>
+          <p>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
         </div>
 
         {/* DATOS CLIENTE Y EQUIPO */}
@@ -95,10 +100,10 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
         {/* POLÍTICAS DE GARANTÍA DETALLADAS */}
         <div className="text-xs border-2 border-black p-4 text-justify space-y-2">
           <p className="font-bold text-center uppercase border-b border-black pb-2 mb-2">Políticas de Garantía</p>
-          <p>• Se otorga una garantía de <strong>15 días</strong> sobre la reparación realizada a partir de la fecha de entrega.</p>
-          <p>• La garantía queda <strong>totalmente anulada</strong> si el dispositivo presenta signos de humedad, golpes, pantallas quebradas, rayones o cualquier daño físico posterior a la entrega.</p>
-          <p>• Usted cuenta con un plazo máximo de <strong>15 días</strong> naturales para recoger su dispositivo una vez notificado que está listo. Pasado este tiempo, MovilPlace ya no se hace responsable por el dispositivo.</p>
-          <p>• Es indispensable presentar este recibo original (físico o digital) para hacer válida cualquier reclamación.</p>
+          <p>• Garantía de 15 días sobre la reparación realizada a partir de la fecha de entrega.</p>
+          <p>• Si el teléfono presenta signos de humedad, está quebrado o rayado, la garantía queda anulada, ya que esos daños no cubren garantía.</p>
+          <p>• El cliente tiene 15 días naturales para recoger su dispositivo una vez notificado que está listo. Una vez pasado ese plazo, MovilPlace ya no se hace responsable por el dispositivo.</p>
+          <p>• Es indispensable presentar este recibo original para hacer válida cualquier reclamación.</p>
         </div>
 
         {/* QRS Y FIRMAS (mt-auto los empuja al final de la hoja) */}
@@ -121,7 +126,7 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
           </div>
         </div>
 
-        <p className="text-center font-black uppercase text-xl">¡Gracias por su preferencia!</p>
+        <p className="text-center font-black uppercase text-xl">¡Gracias por tu preferencia!</p>
       </div>
     </div>
   );
