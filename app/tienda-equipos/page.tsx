@@ -17,9 +17,9 @@ export default function TiendaEquipos() {
         const data = await res.json();
         
         if (data.success && data.productos) {
-          // ✨ FILTRO ESTRICTO: Solo stock > 0 y tipo === 'Dispositivo'
+          // ✨ FILTRO ESTRICTO: Solo stock > 0 y tipo === 'DISPOSTIVO'
           const disponibles = data.productos.filter((item: any) => 
-            item.cantidad > 0 && item.tipo === 'Dispositivo'
+            item.cantidad > 0 && item.tipo === 'DISPOSTIVO'
           );
           setEquipos(disponibles);
           setEquiposFiltrados(disponibles);
