@@ -133,7 +133,7 @@ export default function NotaVentaRefacciones() {
           <div className="grid grid-cols-2 gap-4">
             <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
               <p className="font-black text-[10px] tracking-wide mb-1">¡VALORAMOS TU OPINIÓN!</p>
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-16 h-16" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/6yTQxJsiXwCiA9iYA" className="w-16 h-16" onLoad={() => setQrsCargados(prev => prev + 1)}/>
               <p className="text-[9px] text-gray-500 mt-1">Escanea la encuesta</p>
             </div>
             <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
