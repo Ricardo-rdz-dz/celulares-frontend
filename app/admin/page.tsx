@@ -100,7 +100,7 @@ const handleCerrarSesion = () => {
     return pasaFiltroEstado && pasaBusqueda && pasaFiltroTiempo;
   });
 
-  return (
+return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-slate-900 text-white border-b-4 border-red-600 shadow-md">
         
@@ -135,76 +135,79 @@ const handleCerrarSesion = () => {
           <div className="text-center xl:text-left shrink-0">
             <h1 className="text-2xl font-black tracking-wide uppercase">Movil<span className="text-red-500">Place</span></h1>
             <p className="text-slate-400 text-sm">Panel de Administración</p>
-           
           </div>
           
-          {/* BOTONES EN GRID (Cuadrícula simétrica y colores sutiles) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full xl:w-auto">
+          {/* BOTONES EN GRID */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full xl:w-auto">
             
-            {/* -- ÁREA DE VENTAS -- */}
+            {/* ========================================== */}
+            {/* 🔥 BOTONES PRINCIPALES (Alta Relevancia) 🔥 */}
+            {/* ========================================== */}
             <button
               onClick={() => router.push('/admin/pos')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-emerald-900/30 border-emerald-800/50 text-emerald-100 hover:bg-emerald-800/50 shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-black transition-all border bg-emerald-600 border-emerald-500 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5"
             >
               Venta Equipos
             </button>
 
             <button
               onClick={() => router.push('/admin/refacciones/venta')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-teal-900/30 border-teal-800/50 text-teal-100 hover:bg-teal-800/50 shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-black transition-all border bg-teal-600 border-teal-500 text-white hover:bg-teal-500 shadow-lg shadow-teal-500/20 hover:-translate-y-0.5"
             >
               Venta Refacciones
             </button>
 
-            {/* -- ÁREA DE TALLER E INVENTARIO -- */}
             <button
               onClick={() => router.push('/admin/nuevo')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-blue-900/30 border-blue-800/50 text-blue-100 hover:bg-blue-800/50 shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-black transition-all border bg-blue-600 border-blue-500 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20 hover:-translate-y-0.5"
             >
               Recibir Equipo
             </button>
 
             <button
               onClick={() => router.push('/admin/refacciones')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-indigo-900/30 border-indigo-800/50 text-indigo-100 hover:bg-indigo-800/50 shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-black transition-all border bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5"
             >
               Alta Refacciones
             </button>
 
+            {/* ========================================== */}
+            {/* ⚙️ BOTONES SECUNDARIOS (Formato Sutil) ⚙️  */}
+            {/* ========================================== */}
             <button
               onClick={() => router.push('/admin/inventario')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-purple-900/30 border-purple-800/50 text-purple-100 hover:bg-purple-800/50 shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm"
             >
               Almacén Equipos
             </button>
 
             <button
               onClick={() => router.push('/admin/catalogo')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-amber-900/30 border-amber-800/50 text-amber-100 hover:bg-amber-800/50 shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm"
             >
               Catálogo Precios
             </button>
 
-            {/* -- ÁREA DE ADMINISTRACIÓN -- */}
             <button
               onClick={() => router.push('/admin/clientes')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-rose-900/30 border-rose-800/50 text-rose-100 hover:bg-rose-800/50 shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm"
             >
               CRM Clientes
             </button>
 
             <button
               onClick={() => router.push('/admin/metricas')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-200 hover:bg-slate-700/80 shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm"
             >
               Métricas y KPIs
             </button>
+            
             <button
-  onClick={() => router.push('/admin/finanzas')}
-  className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-200 hover:bg-slate-700/80 shadow-sm"
->
-  Módulo Finanzas
-</button>
+              onClick={() => router.push('/admin/finanzas')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm"
+            >
+              Módulo Finanzas
+            </button>
 
           </div>
         </div>
