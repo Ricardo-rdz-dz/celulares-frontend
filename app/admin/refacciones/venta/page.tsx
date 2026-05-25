@@ -63,7 +63,7 @@ export default function VentasRefacciones() {
 
       if (res.ok && data.success) {
         // Al igual que en el POS de equipos, mandamos directo a imprimir el ticket generado
-        router.push(`/admin/pos/ticket/${data.venta_id}`);
+        router.push(`/admin/refacciones/ticket/${data.venta_id}`);
       } else {
         alert(`Error: ${data.error}`);
       }
