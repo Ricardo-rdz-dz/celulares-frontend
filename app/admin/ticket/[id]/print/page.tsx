@@ -3,13 +3,12 @@
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function PrintTicket({ params }: { params: Promise<{ id: string }> }) {
+export default function PrintTicketFinal({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const ticketId = resolvedParams.id;
-  const router = useRouter(); // Necesario para el botón de volver
+  const router = useRouter(); 
 
   const [ticket, setTicket] = useState<any>(null);
-  // ✨ NUEVO ESTADO: Rastrea cuántas imágenes QR han cargado exitosamente
   const [qrsCargados, setQrsCargados] = useState(0);
 
   useEffect(() => {
@@ -25,32 +24,32 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
     fetchTicket();
   }, [ticketId]);
 
-  // ✨ NUEVA LÓGICA DE IMPRESIÓN INTELIGENTE
   useEffect(() => {
-    // Solo disparamos la impresión si el ticket existe Y los 2 QRs ya se descargaron
     if (ticket && qrsCargados >= 2) {
       setTimeout(() => {
         window.print();
-      }, 300); // Pequeño margen de seguridad visual
+      }, 300); 
     }
   }, [ticket, qrsCargados]);
 
-  if (!ticket) return <div className="p-10 text-center font-mono text-black">Generando recibo...</div>;
+  if (!ticket) return <div className="p-10 text-center font-mono text-black">Generando recibo final...</div>;
+
+  // Cálculos de saldo (Ajusta 'ticket.costo_total' si en tu BD se llama distinto, ej: 'ticket.precio')
+  const costoTotal = parseFloat(ticket.costo_total || ticket.precio || 0);
+  const anticipo = parseFloat(ticket.anticipo || 0);
+  const saldoPagado = costoTotal - anticipo;
 
   return (
     <div className="p-8 max-w-2xl mx-auto bg-white text-black font-sans text-xs bg-transparent">
       
-      {/* ✨ MAGIA CSS PARA LIMPIAR LA IMPRESIÓN DEL RECIBO FINAL */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          /* Elimina los textos de URL, fecha y título de la pestaña */
           @page { margin: 0; }
-          /* Devuelve un espacio interno seguro para que el recibo no se pegue al ras del papel */
           body { padding: 1cm; }
         }
       `}} />
 
-      {/* BOTONES DE ACCIÓN (Asegúrate de tener la clase print:hidden o similar para que no se impriman) */}
+      {/* BOTONES DE ACCIÓN */}
       <div className="mb-6 flex justify-between items-center border-b pb-4 print:hidden">
         <button onClick={() => router.push('/admin')} className="border px-3 py-1.5 rounded hover:bg-slate-50 font-medium">
           ⬅️ Volver al Panel
@@ -60,21 +59,23 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
         </button>
       </div>
 
-      {/* Aquí abajo continúa el diseño de tu recibo de entrega final... */}
-
-      {/* --- INICIO DEL DISEÑO DEL TICKET --- */}
+      {/* --- INICIO DEL DISEÑO DEL RECIBO FINAL --- */}
       
       {/* ENCABEZADO */}
-      <h1 className="text-xl font-bold text-center mb-1 uppercase">MovilPlace</h1>
-      <p className="text-center text-[10px] mb-2 uppercase">Centro de Soluciones Móviles</p>
-      <p className="text-center font-bold border-b border-t border-black border-dashed py-1 mb-4">
-        TICKET DE RECEPCIÓN
+      <h1 className="text-xl font-black text-center mb-1 uppercase tracking-wider">MovilPlace</h1>
+      <p className="text-center text-[10px] mb-2 uppercase text-gray-700">Centro de Soluciones Móviles</p>
+      <p className="text-center font-black text-sm border-b-2 border-t-2 border-black py-1.5 mb-4 uppercase tracking-widest">
+        RECIBO DE SERVICIO
       </p>
 
       {/* DATOS DEL TICKET */}
-      <div className="mb-4 text-xs">
-        <p><strong>FOLIO:</strong> #{ticket.id.toString().substring(0, 8).toUpperCase()}</p>
-        <p><strong>FECHA:</strong> {new Date(ticket.created_at).toLocaleString()}</p>
+      <div className="mb-4 text-xs flex justify-between">
+        <div>
+          <p><strong>FOLIO:</strong> #{ticket.id.toString().substring(0, 8).toUpperCase()}</p>
+        </div>
+        <div className="text-right">
+          <p><strong>FECHA ENTREGA:</strong> {new Date().toLocaleDateString()}</p>
+        </div>
       </div>
 
       {/* DATOS DEL CLIENTE */}
@@ -83,64 +84,74 @@ export default function PrintTicket({ params }: { params: Promise<{ id: string }
         <p><strong>TELÉFONO:</strong> {ticket.clientes?.telefono}</p>
       </div>
 
-      {/* DATOS DEL EQUIPO */}
-      <div className="mb-4 border-b border-black border-dashed pb-2 text-xs">
-        <p><strong>EQUIPO:</strong> {ticket.equipos?.marca} {ticket.equipos?.modelo}</p>
-        <p><strong>FALLA:</strong> {ticket.falla_reportada.toUpperCase()}</p>
-        <p className="mt-2"><strong>CONDICIONES:</strong></p>
-        <p className="pl-2 text-[10px] italic">{ticket.equipos?.detalles_esteticos || 'SIN DETALLES'}</p>
+      {/* DETALLES DEL SERVICIO */}
+      <div className="mb-4 border-b border-black border-dashed pb-3 text-xs">
+        <p className="mb-1"><strong>EQUIPO:</strong> {ticket.equipos?.marca} {ticket.equipos?.modelo}</p>
+        {/* Mostramos la falla original como referencia y el diagnóstico/trabajo final si lo tienes */}
+        <p className="mb-1"><strong>MOTIVO DE INGRESO:</strong> {ticket.falla_reportada.toUpperCase()}</p>
+        <p className="mt-2 font-bold">TRABAJO REALIZADO / NOTAS:</p>
+        <p className="pl-2 text-[10px] italic uppercase">{ticket.diagnostico || 'MANTENIMIENTO Y REPARACIÓN GENERAL'}</p>
       </div>
 
-      {/* COBROS */}
-      <div className="mb-6 flex justify-between font-bold text-base border-b-2 border-black py-1">
-        <span>ANTICIPO:</span>
-        <span>${ticket.anticipo}</span>
+      {/* DESGLOSE DE COBROS */}
+      <div className="mb-6 border-b-2 border-black pb-2">
+        <p className="font-bold mb-2 text-center uppercase border-b border-gray-300 pb-1">Desglose de Pago</p>
+        <div className="flex justify-between text-xs mb-1">
+          <span>COSTO TOTAL DEL SERVICIO:</span>
+          <span>${costoTotal.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-xs mb-1 text-gray-600">
+          <span>ANTICIPO RECIBIDO:</span>
+          <span>-${anticipo.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between font-black text-sm mt-2 pt-2 border-t border-black border-dashed">
+          <span>SALDO LIQUIDADO:</span>
+          <span>${saldoPagado > 0 ? saldoPagado.toFixed(2) : '0.00'}</span>
+        </div>
       </div>
 
-      {/* TÉRMINOS Y CONDICIONES */}
-      <div className="text-[9px] text-justify leading-tight mb-6">
-        <p className="font-bold mb-1 text-center uppercase border-b border-black border-dotted">Términos y Condiciones</p>
-        <p>• Equipos abandonados por más de 15 días ya no serán responsabilidad de MovilPlace.</p>
-        <p>• No hay garantía en equipos mojados, golpeados o intervenidos por terceros.</p>
-        <p>• Es obligatorio presentar este ticket para cualquier trámite.</p>
+      {/* POLÍTICAS DE GARANTÍA */}
+      <div className="text-[9px] text-justify leading-tight mb-6 bg-gray-50 p-2 rounded border border-gray-200">
+        <p className="font-bold mb-1 text-center uppercase border-b border-gray-300 pb-1">Políticas de Garantía</p>
+        <p className="mb-1">• La garantía aplica <strong>únicamente</strong> sobre la refacción instalada o el trabajo específico realizado descrito en este recibo.</p>
+        <p className="mb-1">• <strong>NO hay garantía</strong> en equipos que presenten humedad posterior, golpes, caídas o que hayan sido abiertos por terceros.</p>
+        <p>• Es indispensable presentar este recibo (físico o digital) para hacer válida cualquier reclamación.</p>
       </div>
 
       {/* --- SECCIÓN DE CÓDIGOS QR --- */}
       <div className="my-6 space-y-3">
         
         {/* 1. ENCUESTA DE SERVICIO */}
-        <div className="p-2 border border-black border-dashed rounded-lg text-center bg-gray-50 flex flex-col items-center">
-          <p className="font-bold text-[11px] mb-1">ENCUESTA DE SERVICIO</p>
+        <div className="p-2 border border-black border-dashed rounded-lg text-center flex flex-col items-center">
+          <p className="font-black text-[11px] mb-1 tracking-wide">¡AYÚDANOS A MEJORAR!</p>
           <p className="text-[9px] mb-2 leading-tight">Escanea y cuéntanos qué te pareció nuestro servicio:</p>
           <img 
             src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" 
             alt="QR Encuesta" 
             className="w-20 h-20 mt-1 mb-2"
-            onLoad={() => setQrsCargados(prev => prev + 1)} // ✨ Avisa cuando termina de cargar
+            onLoad={() => setQrsCargados(prev => prev + 1)}
           />
-          <p className="text-[8px] text-gray-500">¡Tu opinión nos ayuda a mejorar!</p>
         </div>
 
         {/* 2. VALORACIÓN DE GOOGLE */}
-        <div className="p-2 border border-black border-dashed rounded-lg text-center bg-gray-50 flex flex-col items-center">
-          <p className="font-bold text-[11px] mb-1">⭐⭐⭐⭐⭐ CALIFÍCANOS</p>
-          <p className="text-[9px] mb-2 leading-tight">¿Satisfecho con tu reparación? Apóyanos con una reseña:</p>
-          
+        <div className="p-2 border border-black border-dashed rounded-lg text-center flex flex-col items-center">
+          <p className="font-black text-[11px] mb-1 tracking-wide">⭐⭐⭐⭐⭐ CALIFÍCANOS</p>
+          <p className="text-[9px] mb-2 leading-tight">¿Quedaste satisfecho con tu reparación? Apóyanos con una reseña:</p>
           <img 
             src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" 
             alt="QR Google Maps" 
             className="w-20 h-20 mt-1 mb-2"
-            onLoad={() => setQrsCargados(prev => prev + 1)} // ✨ Avisa cuando termina de cargar
+            onLoad={() => setQrsCargados(prev => prev + 1)}
           />
-          <p className="text-[8px] text-gray-500">¡Nos ayuda muchísimo a crecer!</p>
+          <p className="text-[8px] text-gray-500 font-bold mt-1">¡Tus 5 estrellas nos ayudan a crecer!</p>
         </div>
 
       </div>
 
-      <p className="text-center font-bold mt-4 uppercase text-[12px]">¡Gracias por tu confianza!</p>
-      <p className="text-center text-[10px] mt-1">Visítanos pronto</p>
+      <p className="text-center font-black mt-6 uppercase text-[12px] tracking-widest">¡Gracias por tu preferencia!</p>
+      <p className="text-center text-[10px] mt-1 text-gray-600">MovilPlace - Siempre conectados</p>
 
-      {/* ESTILOS CSS EXCLUSIVOS PARA IMPRESIÓN (Para asegurar que los fondos grises se impriman) */}
+      {/* ESTILOS CSS EXCLUSIVOS PARA IMPRESIÓN */}
       <style jsx global>{`
         @media print {
           body {
