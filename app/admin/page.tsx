@@ -15,7 +15,7 @@ export default function AdminDashboard() {
   const [filtroTiempo, setFiltroTiempo] = useState('MES'); 
   const [usuarioActivo, setUsuarioActivo] = useState<any>(null);
 
-  useEffect(() => {
+useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets`, { cache: 'no-store' })
       .then(async (res) => {
         if (!res.ok) {
@@ -42,20 +42,35 @@ export default function AdminDashboard() {
       });
   }, []);
 
-// 2. AGREGA ESTE BLOQUE JUSTO DEBAJO
+  // 2. BLOQUE DE SESIÓN CORREGIDO (Seguro contra fallos)
   useEffect(() => {
-    // Esto se ejecuta cada vez que regresas a esta pantalla
-    const sesionGuardada = localStorage.getItem('usuarioActivo');
+    // Leemos la llave correcta que utiliza tu Login para guardar el usuario
+    const sesionGuardada = localStorage.getItem('movilplace_user');
+    
     if (sesionGuardada) {
-      setUsuarioActivo(JSON.parse(sesionGuardada));
+      try {
+        // Intentamos leerlo como un objeto estructurado
+        const usuario = JSON.parse(sesionGuardada);
+        
+        setUsuarioActivo({
+          nombre: usuario.nombre || usuario.name || 'Usuario',
+          rol: usuario.rol || usuario.role || 'Admin'
+        });
+      } catch (error) {
+        // Si no es un JSON válido (por ejemplo, si es texto plano), lo rescatamos aquí
+        setUsuarioActivo({
+          nombre: sesionGuardada,
+          rol: 'Admin'
+        });
+      }
     }
   }, []);
 
-const handleCerrarSesion = () => {
-  localStorage.removeItem('movilplace_token');
-  localStorage.removeItem('movilplace_user');
-  router.push('/login');
-};
+  const handleCerrarSesion = () => {
+    localStorage.removeItem('movilplace_token');
+    localStorage.removeItem('movilplace_user');
+    router.push('/login');
+  };
 
   const colorEstado = (estado: string) => {
     switch (estado) {
