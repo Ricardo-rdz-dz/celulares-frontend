@@ -32,7 +32,7 @@ export default function CatalogoRefacciones() {
     marca: 'Apple',
     modelo: '',  
     descripcion_select: 'Pieza Original Nueva',
-    descripcion_manual: '',
+    detalles_adicionales: '', // <-- Este campo ahora siempre guardará el texto extra
     precio_venta: '',
     precio_costo: '',
     cantidad: '1'
@@ -74,18 +74,31 @@ export default function CatalogoRefacciones() {
     
     setSubiendo(true);
 
-    // ✨ EL TRUCO ESTÁ AQUÍ: Unimos Tipo + Marca + Modelo en una sola frase
+    // Unimos Tipo + Marca + Modelo en una sola frase
     const nombreFinal = `${form.tipo_pieza} ${form.marca !== 'Otra' && form.marca !== 'Genérico' ? form.marca : ''} ${form.modelo}`.trim().replace(/\s+/g, ' ');
     
-    const descripcionFinal = form.descripcion_select === 'Otro' ? form.descripcion_manual : form.descripcion_select;
+    // ✨ EL TRUCO ESTÁ AQUÍ: Unimos la selección del menú con el texto manual
+    const baseCalidad = form.descripcion_select === 'Otro' ? '' : form.descripcion_select;
+    const textoExtra = form.detalles_adicionales.trim();
+    
+    let descripcionFinal = '';
+    if (baseCalidad && textoExtra) {
+      descripcionFinal = `${baseCalidad} - ${textoExtra}`; // Ej: "Calidad Original - Flexor con sarro"
+    } else if (baseCalidad) {
+      descripcionFinal = baseCalidad; // Ej: "Calidad Original"
+    } else if (textoExtra) {
+      descripcionFinal = textoExtra; // Ej: "Solo texto manual"
+    } else {
+      descripcionFinal = 'Sin descripción';
+    }
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refacciones`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nombre: nombreFinal, // Se manda como si fuera un solo campo a tu BD
-          descripcion: descripcionFinal,
+          nombre: nombreFinal, 
+          descripcion: descripcionFinal, // Se manda combinado a tu BD
           precio_venta: form.precio_venta,
           precio_costo: form.precio_costo,
           cantidad: form.cantidad,
@@ -96,7 +109,7 @@ export default function CatalogoRefacciones() {
       if (res.ok) {
         setForm({ 
           tipo_pieza: 'Pantalla', marca: 'Apple', modelo: '', 
-          descripcion_select: 'Pieza Original Nueva', descripcion_manual: '', 
+          descripcion_select: 'Pieza Original Nueva', detalles_adicionales: '', 
           precio_venta: '', precio_costo: '', cantidad: '1' 
         });
         setFotoBase64(null);
@@ -179,11 +192,11 @@ export default function CatalogoRefacciones() {
               </div>
             </div>
 
-            {/* Fila 2: Descripción Dinámica */}
-            <div>
+            {/* Fila 2: Descripción Dinámica (AHORA SIEMPRE VISIBLE) */}
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
               <label className="block text-xs font-black text-slate-500 uppercase mb-1">Condición / Calidad</label>
               <select 
-                className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl font-bold text-slate-700 outline-none cursor-pointer mb-2"
+                className="w-full bg-white border border-slate-200 p-3 rounded-xl font-bold text-slate-700 outline-none cursor-pointer mb-3"
                 value={form.descripcion_select} 
                 onChange={e => setForm({...form, descripcion_select: e.target.value})}
               >
@@ -192,16 +205,14 @@ export default function CatalogoRefacciones() {
                 ))}
               </select>
 
-              {form.descripcion_select === 'Otro' && (
-                <textarea 
-                  rows={2} 
-                  placeholder="Escribe la descripción personalizada aquí..." 
-                  className="w-full bg-slate-50 border-2 border-blue-200 p-3 rounded-xl font-medium outline-none resize-none animate-fadeIn" 
-                  value={form.descripcion_manual} 
-                  onChange={e => setForm({...form, descripcion_manual: e.target.value})} 
-                  autoFocus
-                />
-              )}
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Detalles Extra (Sarro, detalles físicos, etc.)</label>
+              <textarea 
+                rows={2} 
+                placeholder="Ej. Ligeras marcas de humedad en el flexor inferior..." 
+                className="w-full bg-white border border-slate-200 p-3 rounded-xl font-medium outline-none resize-none" 
+                value={form.detalles_adicionales} 
+                onChange={e => setForm({...form, detalles_adicionales: e.target.value})} 
+              />
             </div>
 
             {/* Fila 3: Precios y Stock */}
