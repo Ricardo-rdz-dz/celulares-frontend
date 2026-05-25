@@ -1,177 +1,123 @@
-//ticket final de la reparacion 
-
+// nota ticket venta final
 'use client';
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 
-import { useEffect, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+export default function NotaDeVenta() {
+  const router = useRouter();
+  const params = useParams(); 
+  const id = params?.id;      
 
-export default function PrintTicketFinal({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const ticketId = resolvedParams.id;
-  const router = useRouter(); 
-
-  const [ticket, setTicket] = useState<any>(null);
+  const [venta, setVenta] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [qrsCargados, setQrsCargados] = useState(0);
 
   useEffect(() => {
-    const fetchTicket = async () => {
+    if (!id) return;
+    const fetchVenta = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets/${ticketId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ventas/${id}`); 
         const data = await res.json();
-        setTicket(data.ticket);
+        setVenta(data);
       } catch (error) {
-        console.error('Error al cargar ticket para imprimir:', error);
+        console.error("Error cargando venta:", error);
       }
+      setLoading(false);
     };
-    fetchTicket();
-  }, [ticketId]);
+    fetchVenta();
+  }, [id]); 
 
   useEffect(() => {
-    if (ticket && qrsCargados >= 2) {
+    if (venta && qrsCargados >= 2) {
       setTimeout(() => {
         window.print();
       }, 300); 
     }
-  }, [ticket, qrsCargados]);
+  }, [venta, qrsCargados]);
 
-  if (!ticket) return <div className="p-10 text-center font-mono text-black">Generando recibo final...</div>;
+  if (loading) return <div className="text-center mt-10 font-bold text-2xl">Generando Nota...</div>;
+  if (!venta) return <div className="text-center mt-10 text-2xl">Venta no encontrada.</div>;
 
-  // Cálculos de saldo (Ajusta 'ticket.costo_total' si en tu BD se llama distinto, ej: 'ticket.precio')
-  const costoTotal = parseFloat(ticket.costo_total || ticket.precio || 0);
-  const anticipo = parseFloat(ticket.anticipo || 0);
-  const saldoPagado = costoTotal - anticipo;
-
-  const folio = ticket.id.toString().substring(0, 8).toUpperCase();
+  const folioVenta = venta.id.split('-')[0].toUpperCase();
 
   return (
-    <div className="p-2 max-w-xl mx-auto bg-white text-black font-sans text-[11px] bg-transparent">
+    <div className="w-full max-w-4xl mx-auto p-4 bg-white text-black font-sans print:p-0">
       
-      {/* MAGIA CSS COMPACTA PARA IMPRESIÓN */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          @page { margin: 0; size: auto; }
-          body { padding: 0.3cm; font-size: 10px; }
-          .print\\:hidden { display: none !important; }
+          @page { margin: 0.5cm; size: letter portrait; }
+          .print-hidden { display: none !important; }
+          .hoja-completa { height: 26cm !important; }
         }
       `}} />
 
-      {/* BOTONES DE ACCIÓN */}
-      <div className="mb-3 flex justify-between items-center border-b pb-1 print:hidden">
-        <button onClick={() => router.push('/admin')} className="border px-2.5 py-1 rounded hover:bg-slate-50 font-medium text-xs">
-          ⬅️ Volver al Panel
-        </button>
-        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-3 py-1 rounded font-bold shadow hover:bg-emerald-700 text-xs">
-          🖨️ Imprimir Recibo Final
-        </button>
+      <div className="mb-4 print-hidden">
+        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-8 py-3 rounded-lg font-bold text-xl">🖨️ Imprimir Ticket Completo</button>
       </div>
 
-      {/* RECUADRO DE DISEÑO ULTRA COMPACTO */}
-      <div className="border border-black p-3 space-y-2 relative">
+      {/* Recuadro que estira el contenido a toda la hoja */}
+      <div className="border-4 border-black p-8 hoja-completa flex flex-col justify-between">
         
-        {/* ENCABEZADO */}
-        <div className="text-center border-b border-black pb-1.5 mb-0.5">
-          <h1 className="text-2xl font-black uppercase tracking-wider leading-none">MOVILPLACE</h1>
-          <p className="text-[9px] font-bold uppercase tracking-widest mt-1 bg-black text-white inline-block px-3 py-0.5">Comprobante de Compra</p>
-          <p className="text-[9px] text-gray-700 leading-tight mt-1">
-            Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia (Soriana Hiper)
-          </p>
-          <div className="flex justify-center gap-2 text-[8px] font-bold mt-0.5 text-gray-600">
-            <span>Ventas: 686 176 4066</span> | <span>Reparaciones: 686 172 0406</span>
+        {/* ENCABEZADO GRANDE */}
+        <div className="text-center border-b-4 border-black pb-4">
+          <h1 className="text-6xl font-black uppercase tracking-tight">MOVILPLACE</h1>
+          <p className="text-2xl font-bold uppercase mt-2 bg-black text-white inline-block px-6 py-1">Comprobante de Compra</p>
+          <p className="text-lg mt-3">Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia (Soriana Hiper)</p>
+          <p className="text-lg font-bold mt-1">Ventas: 686 176 4066 | Reparaciones: 686 172 0406</p>
+        </div>
+
+        {/* DATOS DE VENTA */}
+        <div className="flex justify-between text-2xl font-bold mt-4">
+          <p>FOLIO: <span className="text-emerald-700">#V-{folioVenta}</span></p>
+          <p>{new Date(venta.created_at).toLocaleDateString()}</p>
+        </div>
+
+        {/* TABLA DE PRODUCTOS (Expandida) */}
+        <div className="border-y-4 border-black py-6 my-4">
+          <table className="w-full text-xl">
+            <thead>
+              <tr className="border-b-2 border-black text-left">
+                <th className="py-3">CANT</th>
+                <th className="py-3">DESCRIPCIÓN</th>
+                <th className="py-3 text-right">IMPORTE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="font-bold text-2xl">
+                <td className="py-6">{venta.cantidad}x</td>
+                <td className="py-6">{venta.inventario?.nombre} <br/><span className="text-lg font-normal text-gray-600">SKU: {venta.inventario?.sku}</span></td>
+                <td className="py-6 text-right">${venta.total}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* TOTAL Y DETALLES */}
+        <div className="flex justify-between items-center text-3xl font-black bg-gray-100 p-6 border-2 border-black">
+          <span>TOTAL A PAGAR:</span>
+          <span>${venta.total}</span>
+        </div>
+
+        {/* GARANTÍAS (Fuente legible) */}
+        <div className="text-base border-2 border-black p-4 text-justify leading-snug">
+          <p className="font-bold text-center text-lg uppercase mb-2">Políticas de Garantía</p>
+          <p>• 30 días de garantía contra defectos de fábrica. No aplica en golpes, humedad, pantalla rota o software alterado.</p>
+          <p>• Indispensable presentar este ticket original. No hay devoluciones de dinero, solo cambios físicos.</p>
+        </div>
+
+        {/* QR Y FIRMAS ABAJO */}
+        <div className="grid grid-cols-2 gap-8 items-end mt-auto">
+          <div className="flex gap-4">
+             <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-28 h-28" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+             <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-28 h-28" onLoad={() => setQrsCargados(prev => prev + 1)}/>
           </div>
-        </div>
-
-        {/* FOLIO Y FECHA */}
-        <div className="flex justify-between items-center text-[10px] font-bold font-mono">
-          <p>FOLIO: <span className="text-emerald-600">#V-{folio}</span></p>
-          <p>FECHA ENTREGA: {new Date().toLocaleDateString()}</p>
-        </div>
-
-        {/* DATOS DEL CLIENTE */}
-        <div className="border-t border-b border-dashed border-black py-1 text-xs">
-          <p><strong>CLIENTE:</strong> {ticket.clientes?.nombre.toUpperCase()}</p>
-          <p><strong>TELÉFONO:</strong> {ticket.clientes?.telefono}</p>
-        </div>
-
-        {/* DETALLES DEL SERVICIO */}
-        <div className="border-b border-dashed border-black pb-1.5 text-xs">
-          <p className="mb-0.5"><strong>EQUIPO:</strong> {ticket.equipos?.marca} {ticket.equipos?.modelo}</p>
-          <p className="mb-0.5"><strong>MOTIVO DE INGRESO:</strong> {ticket.falla_reportada.toUpperCase()}</p>
-          <p className="mt-1 font-bold">TRABAJO REALIZADO / NOTAS:</p>
-          <p className="pl-1 text-[10px] italic uppercase text-gray-700">{ticket.diagnostico || 'MANTENIMIENTO Y REPARACIÓN GENERAL'}</p>
-        </div>
-
-        {/* DESGLOSE DE COBROS */}
-        <div className="border-b border-black pb-1.5">
-          <div className="flex justify-between text-xs mb-0.5">
-            <span>COSTO TOTAL DEL SERVICIO:</span>
-            <span>${costoTotal.toFixed(2)}</span>
+          <div className="grid grid-cols-2 gap-4 text-center text-sm font-bold">
+            <div><div className="border-b-2 border-black h-16"></div>Firma Cliente</div>
+            <div><div className="border-b-2 border-black h-16"></div>MovilPlace</div>
           </div>
-          <div className="flex justify-between text-xs mb-0.5 text-gray-600">
-            <span>ANTICIPO RECIBIDO:</span>
-            <span>-${anticipo.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between font-black text-sm mt-1 pt-1 border-t border-black border-dashed">
-            <span>SALDO LIQUIDADO:</span>
-            <span>${saldoPagado > 0 ? saldoPagado.toFixed(2) : '0.00'}</span>
-          </div>
-        </div>
-
-        {/* POLÍTICAS DE GARANTÍA */}
-        <div className="text-[8px] border border-black p-1.5 space-y-0.5 text-justify leading-tight font-medium bg-gray-50">
-          <p className="font-bold text-center border-b border-gray-300 pb-0.5 uppercase mb-0.5">Políticas de Garantía</p>
-          <p>• La garantía aplica <strong>únicamente</strong> sobre la refacción instalada o el trabajo específico realizado descrito en este recibo.</p>
-          <p>• <strong>NO hay garantía</strong> en equipos que presenten humedad posterior, golpes, caídas o que hayan sido abiertos por terceros.</p>
-          <p>• Es indispensable presentar este recibo (físico o digital) para hacer válida cualquier reclamación.</p>
-        </div>
-
-        {/* --- SECCIÓN DE CÓDIGOS QR REINTEGRADOS A SU TAMAÑO ORIGINAL (`w-20 h-20`) --- */}
-        <div className="grid grid-cols-2 gap-2 pt-0.5">
-          <div className="p-1.5 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
-            <p className="font-black text-[8px] tracking-wide mb-0.5">¡AYÚDANOS A MEJORAR!</p>
-            <img 
-              src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" 
-              alt="QR Encuesta" 
-              className="w-20 h-20"
-              onLoad={() => setQrsCargados(prev => prev + 1)}
-            />
-            <p className="text-[7px] text-gray-500 leading-none mt-0.5">Escanea la encuesta</p>
-          </div>
-
-          <div className="p-1.5 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
-            <p className="font-black text-[8px] tracking-wide mb-0.5">⭐⭐⭐⭐⭐ CALIFÍCANOS</p>
-            <img 
-              src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" 
-              alt="QR Google Maps" 
-              className="w-20 h-20"
-              onLoad={() => setQrsCargados(prev => prev + 1)}
-            />
-            <p className="text-[7px] text-gray-500 leading-none mt-0.5">Apóyanos con una reseña</p>
-          </div>
-        </div>
-
-        <div className="text-center pt-2 border-t border-dashed border-gray-300">
-          <p className="text-[10px] font-black uppercase tracking-wider leading-none">¡Gracias por tu preferencia!</p>
-          <p className="text-[9px] text-gray-600 mt-0.5">MovilPlace - Siempre conectados</p>
         </div>
 
       </div>
-
-      {/* ESTILOS CSS EXCLUSIVOS PARA IMPRESIÓN */}
-      <style jsx global>{`
-        @media print {
-          body {
-            background: white !important;
-            color: black !important;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
