@@ -130,28 +130,46 @@ export default function PuntoDeVenta() {
                 if (itemsEnCategoria.length === 0) return null; // Si no hay equipos en esta categoría, no la dibuja
 
                 return (
-                  <div key={categoria} className="mb-8">
-                    <h3 className="font-black text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 pb-2 mb-4">
+                  <div key={categoria} className="mb-10">
+                    <h3 className="font-black text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 pb-2 mb-5">
                       {categoria}
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                       {itemsEnCategoria.map(item => (
                         <div 
                           key={item.id}
                           onClick={() => setProducto(item)}
-                          className="border-2 border-slate-100 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition-all hover:shadow-md group flex flex-col justify-between"
+                          className="relative bg-slate-50 border border-slate-200 hover:border-blue-400 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group flex flex-col justify-between overflow-hidden"
                         >
+                          {/* Línea de acento superior sutil que se ilumina al pasar el mouse */}
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-200 to-transparent group-hover:via-blue-500 transition-all duration-500"></div>
+
                           <div>
-                            <span className="text-[10px] bg-slate-100 text-slate-500 font-mono px-2 py-1 rounded-md font-bold block w-fit mb-2 group-hover:bg-blue-100 group-hover:text-blue-600">
-                              SKU: {item.sku}
-                            </span>
-                            <h4 className="font-black text-slate-800 text-sm leading-tight">{item.nombre}</h4>
+                            {/* Encabezado de la tarjeta: SKU y Etiqueta de Stock */}
+                            <div className="flex justify-between items-start mb-3">
+                              <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 group-hover:text-blue-500 transition-colors">
+                                SKU: {item.sku}
+                              </span>
+                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${item.cantidad > 0 ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-red-100 text-red-600 border border-red-200'}`}>
+                                {item.cantidad > 0 ? `${item.cantidad} Disponibles` : 'Agotado'}
+                              </span>
+                            </div>
+                            
+                            {/* Nombre del Producto */}
+                            <h4 className="font-black text-slate-800 text-base leading-tight mb-1 group-hover:text-blue-700 transition-colors">
+                              {item.nombre}
+                            </h4>
                           </div>
-                          <div className="mt-4 flex justify-between items-end">
-                            <span className={`text-xs font-bold ${item.cantidad > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                              Stock: {item.cantidad}
+
+                          {/* Pie de la tarjeta: Separador y Precio */}
+                          <div className="mt-5 flex justify-between items-end border-t border-slate-200/80 pt-3">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                              Precio de Venta
                             </span>
-                            <span className="font-black text-lg text-slate-800">${item.precio_venta}</span>
+                            <span className="font-black text-xl text-slate-800 group-hover:text-blue-600 transition-colors">
+                              ${parseFloat(item.precio_venta).toFixed(2)}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -160,7 +178,6 @@ export default function PuntoDeVenta() {
                 );
               })
             )}
-
             {/* Agregamos una categoría "Otros" por si tienes artículos que no caben en las 5 principales */}
             {(() => {
               const otrosItems = inventarioFiltrado.filter(item => !categoriasOrdenadas.map(c => c.toLowerCase()).includes(item.tipo?.toLowerCase()));
