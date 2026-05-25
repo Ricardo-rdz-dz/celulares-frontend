@@ -7,17 +7,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [autorizado, setAutorizado] = useState(false);
 
   useEffect(() => {
+    // Verificamos la memoria solo una vez al montar el componente
     const sesion = localStorage.getItem('usuarioActivo');
+    
     if (!sesion) {
       router.replace('/'); 
     } else {
       setAutorizado(true);
     }
-  }, [router]);
+  }, []); // <-- El truco está aquí, los corchetes vacíos evitan el bucle
 
   if (!autorizado) {
-    // Pantalla vacía o de carga rápida para que no se asome nada del sistema
-    return <div className="min-h-screen bg-slate-900"></div>;
+    // Pantalla de carga suave en lo que verifica
+    return (
+      <div className="min-h-screen bg-slate-900 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    );
   }
 
   return <>{children}</>;
