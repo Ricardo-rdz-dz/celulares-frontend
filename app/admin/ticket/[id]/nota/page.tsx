@@ -1,3 +1,7 @@
+// NOTA DE RECEPCION DE EQUIPO PARA REPARACION - FORMATO DE TALONARIO FISICO
+// Este diseño es para imprimir una nota física que se le entrega al cliente al dejar su equipo para reparación. 
+// Contiene toda la información relevante del ticket, cliente, equipo, condiciones y cláusulas legales.
+// El diseño está optimizado para impresión en papel tamaño carta o similar, con márgenes adecuados y sin elementos innecesarios.
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';

@@ -1,3 +1,7 @@
+//NOTA DE VENTA DE ARTICULOS - FORMATO DE TALONARIO FISICO
+// Este diseño es para imprimir una nota de venta física que se le entrega al cliente al comprar un artículo. 
+// Contiene toda la información relevante de la venta, cliente, producto, condiciones y cláusulas legales.
+// El diseño está optimizado para impresión en papel tamaño ticket o similar, con márgenes adecuados y sin elementos innecesarios.
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
