@@ -68,7 +68,7 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
             Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia (Soriana Hiper)
           </p>
           <div className="flex justify-center gap-2 text-[8px] font-bold mt-0.5 text-gray-600">
-            <span>Ventas: 686 176 4066</span> | <span>Reparaciones: 686 172 0406</span>
+            <span>Ventas: 686 176 4066</span> | <span>Reparaciones: 686 172 0406</span> | <span>Desloqueos: 686 168 7729</span>
           </div>
         </div>
 

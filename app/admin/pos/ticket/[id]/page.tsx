@@ -43,100 +43,99 @@ export default function NotaDeVenta() {
     }
   }, [venta, qrsCargados]);
 
-  if (loading) return <div className="text-center mt-10 font-bold text-white">Generando Nota de Venta...</div>;
-  if (!venta) return <div className="text-center mt-10 text-white">Venta no encontrada.</div>;
+  if (loading) return <div className="text-center mt-10 font-bold text-xl">Generando Nota de Venta...</div>;
+  if (!venta) return <div className="text-center mt-10 text-xl">Venta no encontrada.</div>;
 
   const folioVenta = venta.id.split('-')[0].toUpperCase();
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-white text-black font-sans text-[11px] print:w-[21cm] print:max-w-none">
+    <div className="w-full max-w-[21cm] mx-auto bg-white text-black font-sans print:w-[21cm] print:h-[28cm]">
       
-      {/* MAGIA CSS PARA ASEGURAR QUE TODO QUEPA EN UNA HOJA */}
+      {/* MAGIA CSS PARA LLENAR LA HOJA */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          @page { margin: 0.5cm; size: letter portrait; }
+          @page { margin: 1cm; size: letter portrait; }
           body { -webkit-print-color-adjust: exact; }
           .print-hidden { display: none !important; }
-          .hoja-limite { height: 26cm !important; overflow: hidden; }
         }
       `}} />
 
       {/* BOTONES AUXILIARES */}
       <div className="mb-3 flex justify-between items-center border-b pb-1 print-hidden">
-        <button onClick={() => router.push('/admin/pos')} className="border px-2.5 py-1 rounded hover:bg-slate-50 font-medium text-xs">
+        <button onClick={() => router.push('/admin/pos')} className="border px-4 py-2 rounded hover:bg-slate-50 font-medium">
           ⬅️ Nueva Venta
         </button>
-        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-3 py-1 rounded font-bold shadow hover:bg-emerald-700 text-xs">
+        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-emerald-700">
           🖨️ Imprimir Ticket
         </button>
       </div>
 
-      {/* RECUADRO CON LÍMITE DE HOJA */}
-      <div className="border border-black p-3 space-y-2 relative hoja-limite">
+      {/* RECUADRO QUE SE ESTIRA PARA LLENAR LA HOJA (Flexbox) */}
+      <div className="border-2 border-black p-6 flex flex-col min-h-[25cm] relative">
         
         {/* ENCABEZADO */}
-        <div className="text-center border-b border-black pb-1.5 mb-0.5">
-          <h1 className="text-2xl font-black uppercase tracking-wider leading-none">MOVILPLACE</h1>
-          <p className="text-[9px] font-bold uppercase tracking-widest mt-1 bg-black text-white inline-block px-3 py-0.5">Comprobante de Compra</p>
-          <p className="text-[9px] text-gray-700 leading-tight mt-1">
+        <div className="text-center border-b border-black pb-3 mb-2">
+          <h1 className="text-4xl font-black uppercase tracking-wider leading-none">MOVILPLACE</h1>
+          <p className="text-sm font-bold uppercase tracking-widest mt-2 bg-black text-white inline-block px-4 py-1">Comprobante de Compra</p>
+          <p className="text-sm text-gray-700 leading-tight mt-2">
             Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia (Soriana Hiper)
           </p>
-          <div className="flex justify-center gap-2 text-[8px] font-bold mt-0.5 text-gray-600">
-            <span>Ventas: 686 176 4066</span> | <span>Reparaciones: 686 172 0406</span>
+          <div className="flex justify-center gap-4 text-xs font-bold mt-2 text-gray-600">
+            <span>Ventas: 686 176 4066</span> | <span>Reparaciones: 686 172 0406</span> | <span>Desbloqueos: 686 168 7729</span>
           </div>
         </div>
 
         {/* FOLIO Y FECHA */}
-        <div className="flex justify-between items-center text-[10px] font-bold font-mono">
-          <p>FOLIO: <span className="text-emerald-600">#V-{folioVenta}</span></p>
-          <p>{new Date(venta.created_at).toLocaleDateString()} {new Date(venta.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+        <div className="flex justify-between items-center text-sm font-bold font-mono">
+          <p className="text-lg">FOLIO: <span className="text-emerald-600">#V-{folioVenta}</span></p>
+          <p className="text-lg">{new Date(venta.created_at).toLocaleDateString()} {new Date(venta.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
         </div>
 
         {/* DETALLE DEL PRODUCTO VENDIDO */}
-        <div className="border-t border-b border-dashed border-black py-1">
-          <table className="w-full text-[10px] font-mono">
+        <div className="border-t-2 border-b-2 border-dashed border-black py-4 flex-grow">
+          <table className="w-full text-base font-mono">
             <thead>
-              <tr className="border-b border-black text-left font-bold">
-                <th className="pb-0.5 w-12">CANT</th>
-                <th className="pb-0.5">DESCRIPCIÓN</th>
-                <th className="pb-0.5 text-right">IMPORTE</th>
+              <tr className="border-b-2 border-black text-left font-bold">
+                <th className="pb-2 w-20">CANT</th>
+                <th className="pb-2">DESCRIPCIÓN</th>
+                <th className="pb-2 text-right">IMPORTE</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="font-bold">
-                <td className="pt-0.5 align-top">{venta.cantidad}x</td>
-                <td className="pt-0.5 leading-tight">
+              <tr className="font-bold text-lg">
+                <td className="pt-4 align-top">{venta.cantidad}x</td>
+                <td className="pt-4 leading-tight">
                   {venta.inventario?.nombre} <br/>
-                  <span className="text-[8px] font-normal text-gray-500">SKU: {venta.inventario?.sku}</span>
+                  <span className="text-sm font-normal text-gray-500">SKU: {venta.inventario?.sku}</span>
                 </td>
-                <td className="pt-0.5 text-right align-top">${venta.total}</td>
+                <td className="pt-4 text-right align-top">${venta.total}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* INCLUYE / EXTRAS */}
-        <div className="text-[9px] bg-gray-50 border border-gray-200 p-1.5 leading-tight flex justify-between items-center">
+        <div className="text-base bg-gray-50 border border-gray-300 p-4 leading-tight flex justify-between items-center mb-2">
           <div>
-            <span className="font-bold text-blue-800 uppercase block text-[8px]">Incluye:</span>
+            <span className="font-bold text-blue-800 uppercase block text-sm">Incluye:</span>
             <p className="font-mono font-bold text-gray-700">{venta.detalles_regalo_accesorios || 'Ninguno'}</p>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-[8px] text-gray-400 uppercase block">Pago</span>
-            <span className="font-bold border border-black px-1.5 py-0.2 bg-white text-[9px]">{venta.metodo_pago}</span>
+            <span className="text-xs text-gray-400 uppercase block">Pago</span>
+            <span className="font-bold border-2 border-black px-4 py-1 bg-white text-base">{venta.metodo_pago}</span>
           </div>
         </div>
 
         {/* TOTALES */}
-        <div className="flex justify-end text-xs font-bold font-mono">
-          <div className="w-36 border border-black flex justify-between p-1 bg-gray-100 text-sm">
+        <div className="flex justify-end text-lg font-bold font-mono mb-4">
+          <div className="w-56 border-2 border-black flex justify-between p-3 bg-gray-100">
             <span>TOTAL:</span><span>${venta.total}</span>
           </div>
         </div>
 
         {/* CLÁUSULAS DE GARANTÍA PARA VENTAS */}
-        <div className="text-[8px] border border-black p-1.5 space-y-0.5 text-justify leading-tight font-medium">
-          <p className="font-bold text-center border-b border-gray-300 pb-0.5 uppercase mb-0.5">Políticas de Garantía de Venta</p>
+        <div className="text-xs border border-black p-3 space-y-1 text-justify font-medium">
+          <p className="font-bold text-center border-b border-gray-300 pb-1 uppercase mb-1">Políticas de Garantía de Venta</p>
           <p>• Los equipos cuentan con <span className="font-bold">30 días de garantía</span> exclusivamente contra defectos de fábrica a partir de la fecha de esta nota.</p>
           <p>• <span className="font-bold underline">La garantía queda ANULADA</span> si el equipo presenta golpes, raspones, humedad, pantallas estrelladas, alteraciones de software o por arrepentimiento del cliente.</p>
           <p>• Para artículos de electrónica o accesorios (cables, micas, fundas), NO aplican cambios ni devoluciones. Solicita que se revisen al momento de la compra.</p>
@@ -145,45 +144,32 @@ export default function NotaDeVenta() {
           <p>• En caso de requerir garantía, el cliente debe primero comunicarse con nosotros para después acudir a nuestras instalaciones para que un técnico revise el equipo y determine si aplica la garantía o no.</p>
         </div>
 
-        {/* --- SECCIÓN DE CÓDIGOS QR --- */}
-        <div className="grid grid-cols-2 gap-2 pt-0.5">
-          <div className="p-1.5 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
-            <p className="font-black text-[8px] tracking-wide mb-0.5">¡VALORAMOS TU OPINIÓN!</p>
-            <img 
-              src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" 
-              alt="QR Encuesta" 
-              className="w-16 h-16"
-              onLoad={() => setQrsCargados(prev => prev + 1)}
-            />
-            <p className="text-[7px] text-gray-500 leading-none mt-0.5">Escanea la encuesta</p>
-          </div>
+        {/* --- SECCIÓN DE CÓDIGOS QR Y FIRMAS (mt-auto los mantiene abajo) --- */}
+        <div className="mt-auto pt-6 border-t-2 border-dashed border-gray-300">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
+                <p className="font-black text-[10px] tracking-wide mb-1">¡VALORAMOS TU OPINIÓN!</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+                <p className="text-[9px] text-gray-500 mt-1">Escanea la encuesta</p>
+              </div>
+              <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
+                <p className="font-black text-[10px] tracking-wide mb-1">⭐⭐⭐⭐⭐ RESEÑA</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+                <p className="text-[9px] text-gray-500 mt-1">Déjanos 5 estrellas en Google</p>
+              </div>
+            </div>
 
-          <div className="p-1.5 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
-            <p className="font-black text-[8px] tracking-wide mb-0.5">⭐⭐⭐⭐⭐ RESEÑA</p>
-            <img 
-              src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" 
-              alt="QR Google Maps" 
-              className="w-16 h-16"
-              onLoad={() => setQrsCargados(prev => prev + 1)}
-            />
-            <p className="text-[7px] text-gray-500 leading-none mt-0.5">Déjanos 5 estrellas en Google</p>
-          </div>
-        </div>
-
-        {/* FIRMAS */}
-        <div className="pt-2 grid grid-cols-2 gap-6 text-center">
-          <div>
-            <div className="border-b border-black w-full h-4"></div>
-            <p className="text-[8px] font-bold mt-0.5 uppercase tracking-tighter">Firma Cliente</p>
-          </div>
-          <div>
-            <div className="border-b border-black w-full h-4"></div>
-            <p className="text-[8px] font-bold mt-0.5 uppercase tracking-tighter">Entregó MovilPlace</p>
-          </div>
-        </div>
-
-        <div className="text-center pt-0.5 border-t border-dashed border-gray-300">
-          <p className="text-[10px] font-black uppercase tracking-wider leading-none">¡Gracias por tu compra!</p>
+            <div className="pt-6 grid grid-cols-2 gap-10 text-center">
+              <div>
+                <div className="border-b-2 border-black w-full h-8"></div>
+                <p className="text-xs font-bold mt-1 uppercase tracking-tighter">Firma Cliente</p>
+              </div>
+              <div>
+                <div className="border-b-2 border-black w-full h-8"></div>
+                <p className="text-xs font-bold mt-1 uppercase tracking-tighter">Entregó MovilPlace</p>
+              </div>
+            </div>
+            <p className="text-sm font-black uppercase tracking-wider text-center pt-4">¡Gracias por tu compra!</p>
         </div>
 
       </div>
