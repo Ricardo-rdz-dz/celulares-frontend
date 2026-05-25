@@ -10,6 +10,9 @@ export default function NotaDeVenta() {
 
   const [venta, setVenta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // ✨ NUEVO ESTADO: Rastrea cuántas imágenes QR han cargado
+  const [qrsCargados, setQrsCargados] = useState(0);
 
   useEffect(() => {
     // ✨ FRENO DE MANO: Si aún no lee el ID de la URL, nos esperamos
@@ -28,6 +31,16 @@ export default function NotaDeVenta() {
     };
     fetchVenta();
   }, [id]); // ✨ Dependemos del "id" limpio
+
+  // ✨ NUEVA LÓGICA DE IMPRESIÓN INTELIGENTE
+  useEffect(() => {
+    // Disparamos la impresión si la venta existe Y los 2 QRs ya se descargaron
+    if (venta && qrsCargados >= 2) {
+      setTimeout(() => {
+        window.print();
+      }, 300); // Pequeño margen para asegurar el renderizado
+    }
+  }, [venta, qrsCargados]);
 
   if (loading) return <div className="text-center mt-20 font-bold text-white">Generando Nota de Venta...</div>;
   if (!venta) return <div className="text-center mt-20 text-white">Venta no encontrada.</div>;
@@ -72,7 +85,6 @@ export default function NotaDeVenta() {
             <span>Reparaciones: 686 172 0406</span> | 
             <span>Desbloqueos: 686 168 7729</span>
           </div>
-          
         </div>
 
         {/* FOLIO Y FECHA */}
@@ -132,12 +144,40 @@ export default function NotaDeVenta() {
           <p>• <span className="font-bold underline">La garantía queda ANULADA</span> si el equipo presenta golpes, raspones, humedad, displays estrellados, alteraciones de software o por arrepentimiento del cliente.</p>
           <p>• Para artículos de electrónica o accesorios (cables, micas, fundas), NO aplican cambios ni devoluciones. Solicita que se revisen al momento de la compra.</p>
           <p>• Es estrictamente indispensable presentar este comprobante original para validar cualquier garantía. Sin nota, no hay garantía.</p>
-           <p>• No se hace devolución de dinero, se realizan solo cambios por otro equipo igual u otro modelo.</p>
-            <p>• En caso de requerir garantía, el cliente debe acudir a nuestras instalaciones para que un técnico revise el equipo y determine si aplica la garantía.</p>
+          <p>• No se hace devolución de dinero, se realizan solo cambios por otro equipo igual u otro modelo.</p>
+          <p>• En caso de requerir garantía, el cliente debe acudir a nuestras instalaciones para que un técnico revise el equipo y determine si aplica la garantía.</p>
+        </div>
+
+        {/* --- SECCIÓN DE CÓDIGOS QR (En dos columnas para ahorrar espacio) --- */}
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          {/* 1. ENCUESTA DE SERVICIO */}
+          <div className="p-2 border border-black border-dashed rounded-lg text-center flex flex-col items-center bg-gray-50">
+            <p className="font-black text-[10px] mb-1 tracking-wide">¡AYÚDANOS A MEJORAR!</p>
+            <p className="text-[8px] mb-1 leading-tight">Escanea y cuéntanos qué te pareció tu compra:</p>
+            <img 
+              src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/77gJUNZSQYDwqMws8" 
+              alt="QR Encuesta" 
+              className="w-16 h-16 mt-1 mb-1"
+              onLoad={() => setQrsCargados(prev => prev + 1)}
+            />
+          </div>
+
+          {/* 2. VALORACIÓN DE GOOGLE */}
+          <div className="p-2 border border-black border-dashed rounded-lg text-center flex flex-col items-center bg-gray-50">
+            <p className="font-black text-[10px] mb-1 tracking-wide">⭐⭐⭐⭐⭐ CALIFÍCANOS</p>
+            <p className="text-[8px] mb-1 leading-tight">¿Quedaste satisfecho? Apóyanos con una reseña:</p>
+            <img 
+              src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" 
+              alt="QR Google Maps" 
+              className="w-16 h-16 mt-1 mb-1"
+              onLoad={() => setQrsCargados(prev => prev + 1)}
+            />
+            <p className="text-[7px] text-gray-500 font-bold mt-1">¡Tus 5 estrellas nos ayudan a crecer!</p>
+          </div>
         </div>
 
         {/* FIRMAS */}
-        <div className="pt-12 grid grid-cols-2 gap-10 text-center">
+        <div className="pt-8 grid grid-cols-2 gap-10 text-center">
           <div>
             <div className="border-b border-black w-full mx-auto h-12"></div>
             <p className="text-[10px] font-bold mt-1 uppercase">Firma de Conformidad (Cliente)</p>
