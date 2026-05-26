@@ -1,6 +1,95 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
+// =====================================================================
+// COMPONENTE NUEVO: Carrusel Premium para las fotos de la galería
+// =====================================================================
+const CarruselImagenes = ({ equipo }: { equipo: any }) => {
+  // Verificamos si tiene la nueva galería o solo la foto vieja
+  const fotos = Array.isArray(equipo.galeria) && equipo.galeria.length > 0 
+    ? equipo.galeria 
+    : (equipo.imagen_url ? [equipo.imagen_url] : []);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  if (fotos.length === 0) {
+    return (
+      <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center text-gray-300">
+        <span className="text-7xl block mb-4 drop-shadow-sm">📱</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Imagen Pendiente</span>
+      </div>
+    );
+  }
+
+  const scrollToIndex = (index: number) => {
+    setCurrentIndex(index);
+    if (scrollRef.current) {
+      const width = scrollRef.current.clientWidth;
+      scrollRef.current.scrollTo({ left: width * index, behavior: 'smooth' });
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const scrollPosition = scrollRef.current.scrollLeft;
+      const width = scrollRef.current.clientWidth;
+      const newIndex = Math.round(scrollPosition / width);
+      setCurrentIndex(newIndex);
+    }
+  };
+
+  return (
+    <div className="relative w-full h-full group">
+      {/* Contenedor con Scroll Nativo (Permite 'swipe' táctil) */}
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {fotos.map((foto: string, idx: number) => (
+          <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+            <img src={foto} alt={`${equipo.nombre} - ${idx + 1}`} className="w-full h-full object-cover" />
+          </div>
+        ))}
+      </div>
+
+      {/* Botones de Navegación (Visibles al pasar el mouse en PC) */}
+      {fotos.length > 1 && (
+        <>
+          <button 
+            onClick={(e) => { e.stopPropagation(); scrollToIndex(currentIndex === 0 ? fotos.length - 1 : currentIndex - 1); }} 
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-black w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md sm:flex hidden"
+          >
+            ◀
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); scrollToIndex(currentIndex === fotos.length - 1 ? 0 : currentIndex + 1); }} 
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-black w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md sm:flex hidden"
+          >
+            ▶
+          </button>
+
+          {/* Puntos Indicadores (Dots) */}
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+            {fotos.map((_: any, idx: number) => (
+              <div 
+                key={idx} 
+                className={`transition-all duration-300 rounded-full ${idx === currentIndex ? 'bg-black w-4 h-1.5' : 'bg-black/30 border border-white/50 w-1.5 h-1.5'}`} 
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+
+// =====================================================================
+// PÁGINA PRINCIPAL
+// =====================================================================
 export default function TiendaEquipos() {
   const [equipos, setEquipos] = useState<any[]>([]);
   const [equiposFiltrados, setEquiposFiltrados] = useState<any[]>([]);
@@ -16,8 +105,7 @@ export default function TiendaEquipos() {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`);
         const data = await res.json();
         
-       if (data.success && data.productos) {
-          // ✨ FILTRO CORREGIDO: Compara convirtiendo todo a mayúsculas para evitar errores
+        if (data.success && data.productos) {
           const disponibles = data.productos.filter((item: any) => 
             item.cantidad > 0 && item.tipo?.toUpperCase() === 'DISPOSITIVO'
           );
@@ -83,6 +171,11 @@ export default function TiendaEquipos() {
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans pb-24">
       
+      {/* MAGIA CSS: Ocultar barras de scroll del carrusel */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+      `}} />
+
       {/* NAVBAR MINIMALISTA PREMIUM */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 p-4 sm:px-8 flex justify-between items-center bg-white/90 backdrop-blur-md">
         <div>
@@ -102,7 +195,7 @@ export default function TiendaEquipos() {
         </button>
       </nav>
 
-      {/* CABECERA Y BUSCADOR (Diseño limpio y espacioso) */}
+      {/* CABECERA Y BUSCADOR */}
       <div className="pt-10 pb-8 px-4 sm:px-8 max-w-7xl mx-auto">
         <h2 className="text-4xl sm:text-5xl font-black text-black mb-6 tracking-tight">Equipos Disponibles</h2>
         <div className="relative max-w-3xl">
@@ -130,18 +223,13 @@ export default function TiendaEquipos() {
             {equiposFiltrados.map((equipo) => (
               <div key={equipo.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col group hover:border-black transition-colors duration-300">
                 
-                {/* Zona de Imagen (Aspect ratio grande y cuadrado para lucir el equipo) */}
-                <div className="aspect-[4/3] sm:aspect-square bg-gray-50 flex flex-col items-center justify-center relative overflow-hidden border-b border-gray-100">
-                  {equipo.imagen_url ? (
-                    <img src={equipo.imagen_url} alt={equipo.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
-                  ) : (
-                    <div className="text-center text-gray-300">
-                      <span className="text-7xl block mb-4 drop-shadow-sm">📱</span>
-                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Imagen Pendiente</span>
-                    </div>
-                  )}
+                {/* ZONA DE IMAGEN CON CARRUSEL */}
+                <div className="aspect-[4/3] sm:aspect-square bg-gray-50 relative overflow-hidden border-b border-gray-100">
+                  
+                  <CarruselImagenes equipo={equipo} />
+
                   {/* Badge Elegante */}
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur border border-gray-200 text-black text-[10px] font-black px-3 py-1 uppercase tracking-widest shadow-sm">
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur border border-gray-200 text-black text-[10px] font-black px-3 py-1 uppercase tracking-widest shadow-sm pointer-events-none">
                     Stock: {equipo.cantidad}
                   </div>
                 </div>
@@ -193,24 +281,29 @@ export default function TiendaEquipos() {
                   <p className="font-medium text-lg">Tu cesta está vacía.</p>
                 </div>
               ) : (
-                carrito.map((item) => (
-                  <div key={item.id} className="flex gap-4 bg-white border border-gray-200 p-4 items-center">
-                    <div className="w-20 h-20 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center text-3xl border border-gray-100">
-                      {item.imagen_url ? <img src={item.imagen_url} className="w-full h-full object-cover" /> : '📱'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">SKU: {item.sku}</p>
-                      <h4 className="font-black text-base leading-tight text-black mb-2 truncate">{item.nombre}</h4>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1">Cant: {item.cantidad_carrito}</span>
-                        <span className="font-black text-lg text-black">${parseFloat(item.precio_venta).toFixed(2)}</span>
+                carrito.map((item) => {
+                  // Extraer la primera foto de la galería para la miniatura
+                  const portada = Array.isArray(item.galeria) && item.galeria.length > 0 ? item.galeria[0] : item.imagen_url;
+
+                  return (
+                    <div key={item.id} className="flex gap-4 bg-white border border-gray-200 p-4 items-center">
+                      <div className="w-20 h-20 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center text-3xl border border-gray-100">
+                        {portada ? <img src={portada} className="w-full h-full object-cover" /> : '📱'}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">SKU: {item.sku}</p>
+                        <h4 className="font-black text-base leading-tight text-black mb-2 truncate">{item.nombre}</h4>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1">Cant: {item.cantidad_carrito}</span>
+                          <span className="font-black text-lg text-black">${parseFloat(item.precio_venta).toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <button onClick={() => eliminarDelCarrito(item.id)} className="text-gray-400 hover:text-red-500 p-2 transition-colors">
+                        <span className="text-xl">🗑️</span>
+                      </button>
                     </div>
-                    <button onClick={() => eliminarDelCarrito(item.id)} className="text-gray-400 hover:text-red-500 p-2 transition-colors">
-                      <span className="text-xl">🗑️</span>
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
