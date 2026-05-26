@@ -16,10 +16,10 @@ export default function TiendaEquipos() {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`);
         const data = await res.json();
         
-        if (data.success && data.productos) {
-          // ✨ FILTRO ESTRICTO: Solo stock > 0 y tipo === 'DISPOSTIVO'
+       if (data.success && data.productos) {
+          // ✨ FILTRO CORREGIDO: Compara convirtiendo todo a mayúsculas para evitar errores
           const disponibles = data.productos.filter((item: any) => 
-            item.cantidad > 0 && item.tipo === 'DISPOSTIVO'
+            item.cantidad > 0 && item.tipo?.toUpperCase() === 'DISPOSITIVO'
           );
           setEquipos(disponibles);
           setEquiposFiltrados(disponibles);
