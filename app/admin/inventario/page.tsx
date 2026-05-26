@@ -8,7 +8,7 @@ export default function InventarioDashboard() {
   const [loading, setLoading] = useState(true);
   const [filtroTipo, setFiltroTipo] = useState<'REFACCION' | 'DISPOSITIVO'>('REFACCION');
   
-  // Estados para el formulario modal
+  // Estados para el formulario modal (✨ Se agregó descripcion)
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -33,16 +33,20 @@ export default function InventarioDashboard() {
   const abrirModalCrear = () => {
     setEditandoId(null);
     setForm({ nombre: '', sku: '', tipo: filtroTipo, cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0', descripcion: '' });
-    setModalAbierto(true); 
     setModalAbierto(true);
   };
 
   const abrirModalEditar = (p: any) => {
     setEditandoId(p.id);
     setForm({
-      nombre: p.nombre, sku: p.sku || '', tipo: p.tipo,
-      cantidad: p.cantidad.toString(), stock_minimo: p.stock_minimo.toString(),
-      precio_compra: p.precio_compra.toString(), precio_venta: p.precio_venta.toString(), descripcion: p.descripcion || ''
+      nombre: p.nombre, 
+      sku: p.sku || '', 
+      tipo: p.tipo,
+      cantidad: p.cantidad.toString(), 
+      stock_minimo: p.stock_minimo.toString(),
+      precio_compra: p.precio_compra.toString(), 
+      precio_venta: p.precio_venta.toString(),
+      descripcion: p.descripcion || '' // ✨ Carga la descripción si existe
     });
     setModalAbierto(true);
   };
@@ -65,6 +69,7 @@ export default function InventarioDashboard() {
           stock_minimo: parseInt(form.stock_minimo),
           precio_compra: parseFloat(form.precio_compra),
           precio_venta: parseFloat(form.precio_venta)
+          // La descripción ya va incluida dentro de ...form como texto
         })
       });
 
@@ -151,11 +156,19 @@ export default function InventarioDashboard() {
                   return (
                     <tr key={p.id} className={`hover:bg-slate-50 transition-colors ${esAlertaStock ? 'bg-red-50/40' : ''}`}>
                       <td className="p-4 font-bold text-slate-900">
-                        <div className="flex items-center gap-2">
-                          {p.nombre}
-                          {esAlertaStock && (
-                            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black uppercase rounded-full tracking-widest animate-pulse" title="Resurtido Requerido">
-                              ⚠️ STOCK BAJO
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            {p.nombre}
+                            {esAlertaStock && (
+                              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black uppercase rounded-full tracking-widest animate-pulse" title="Resurtido Requerido">
+                                ⚠️ STOCK BAJO
+                              </span>
+                            )}
+                          </div>
+                          {/* Pequeño indicador visual si tiene descripción */}
+                          {p.descripcion && (
+                            <span className="text-[10px] text-slate-400 font-normal truncate max-w-[200px]">
+                              📝 {p.descripcion}
                             </span>
                           )}
                         </div>
@@ -186,11 +199,13 @@ export default function InventarioDashboard() {
                 <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">{editandoId ? '✏️ Modificar Artículo' : '📦 Registrar en Almacén'}</h3>
                 <button onClick={() => setModalAbierto(false)} className="text-slate-400 hover:text-slate-600 text-sm">✕</button>
               </div>
-              <form onSubmit={handleGuardar} className="p-6 space-y-4 text-xs font-semibold">
+              
+              <form onSubmit={handleGuardar} className="p-6 space-y-4 text-xs font-semibold max-h-[80vh] overflow-y-auto">
                 <div>
                   <label className="block text-slate-500 uppercase tracking-wider mb-1">Nombre del Producto / Refacción</label>
                   <input type="text" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} placeholder="Ej. Pantalla Original Moto G Play 2024" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium outline-none text-sm focus:bg-white" />
                 </div>
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-slate-500 uppercase tracking-wider mb-1">SKU / Clave Interna</label>
@@ -204,6 +219,20 @@ export default function InventarioDashboard() {
                     </select>
                   </div>
                 </div>
+
+                {/* ✨ NUEVO: Campo de Descripción */}
+                <div className="border-t pt-3 border-slate-100">
+                  <label className="block text-slate-500 uppercase tracking-wider mb-1">Descripción Detallada (Opcional)</label>
+                  <textarea 
+                    rows={4} 
+                    value={form.descripcion} 
+                    onChange={e => setForm({...form, descripcion: e.target.value})} 
+                    placeholder="Describe el estado del equipo, estética, si incluye cargador original, detalles de garantía..." 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium outline-none text-sm focus:bg-white resize-y" 
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1 font-normal">Este texto será visible para tus clientes en la tienda web al hacer clic en el equipo.</p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4 border-t pt-3 border-slate-100">
                   <div>
                     <label className="block text-slate-500 uppercase tracking-wider mb-1">Cantidad Actual en Stock</label>
@@ -214,6 +243,7 @@ export default function InventarioDashboard() {
                     <input type="number" min="1" required value={form.stock_minimo} onChange={e => setForm({...form, stock_minimo: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm font-black outline-none focus:bg-white" />
                   </div>
                 </div>
+                
                 <div className="grid grid-cols-2 gap-4 border-t pt-3 border-slate-100">
                   <div>
                     <label className="block text-slate-500 uppercase tracking-wider mb-1">Costo de Compra ($)</label>
@@ -224,11 +254,13 @@ export default function InventarioDashboard() {
                     <input type="number" step="0.01" min="0" required value={form.precio_venta} onChange={e => setForm({...form, precio_venta: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-sm focus:bg-white outline-none text-emerald-700 font-bold" />
                   </div>
                 </div>
+                
                 <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
                   <button type="button" onClick={() => setModalAbierto(false)} className="px-4 py-2 border rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
                   <button type="submit" className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm">Guardar Cambios</button>
                 </div>
               </form>
+
             </div>
           </div>
         )}
