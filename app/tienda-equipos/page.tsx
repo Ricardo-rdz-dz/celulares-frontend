@@ -2,22 +2,30 @@
 import { useEffect, useState, useRef } from 'react';
 
 // =====================================================================
-// COMPONENTE NUEVO: Carrusel Premium para las fotos de la galería
+// COMPONENTE: Carrusel Premium (Ajustado para tarjetas más pequeñas)
 // =====================================================================
 const CarruselImagenes = ({ equipo }: { equipo: any }) => {
-  // Verificamos si tiene la nueva galería o solo la foto vieja
-  const fotos = Array.isArray(equipo.galeria) && equipo.galeria.length > 0 
-    ? equipo.galeria 
-    : (equipo.imagen_url ? [equipo.imagen_url] : []);
+  let fotos: string[] = [];
+  
+  // Extraer fotos de forma segura
+  if (Array.isArray(equipo.galeria) && equipo.galeria.length > 0) {
+    fotos = equipo.galeria;
+  } else if (typeof equipo.galeria === 'string' && equipo.galeria.length > 2) {
+    try {
+      const limpiado = equipo.galeria.replace(/^{|}$/g, '').replace(/"/g, '');
+      fotos = limpiado.split(',').map((url: string) => url.trim()).filter(Boolean);
+    } catch(e) {}
+  }
+  if (fotos.length === 0 && equipo.imagen_url) fotos = [equipo.imagen_url];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   if (fotos.length === 0) {
     return (
-      <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center text-gray-300">
-        <span className="text-7xl block mb-4 drop-shadow-sm">📱</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Imagen Pendiente</span>
+      <div className="w-full h-full bg-slate-50 flex flex-col items-center justify-center text-slate-300">
+        <span className="text-5xl block mb-2 drop-shadow-sm">📱</span>
+        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Sin Foto</span>
       </div>
     );
   }
@@ -41,7 +49,6 @@ const CarruselImagenes = ({ equipo }: { equipo: any }) => {
 
   return (
     <div className="relative w-full h-full group">
-      {/* Contenedor con Scroll Nativo (Permite 'swipe' táctil) */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
@@ -49,35 +56,25 @@ const CarruselImagenes = ({ equipo }: { equipo: any }) => {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {fotos.map((foto: string, idx: number) => (
-          <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-            <img src={foto} alt={`${equipo.nombre} - ${idx + 1}`} className="w-full h-full object-cover" />
+          <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative bg-white">
+            <img src={foto} alt={`${equipo.nombre} - ${idx + 1}`} className="w-full h-full object-contain p-2" />
           </div>
         ))}
       </div>
 
-      {/* Botones de Navegación (Visibles al pasar el mouse en PC) */}
       {fotos.length > 1 && (
         <>
           <button 
             onClick={(e) => { e.stopPropagation(); scrollToIndex(currentIndex === 0 ? fotos.length - 1 : currentIndex - 1); }} 
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-black w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md sm:flex hidden"
-          >
-            ◀
-          </button>
+            className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/90 text-black w-6 h-6 rounded-full items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm sm:flex hidden text-xs"
+          >◀</button>
           <button 
             onClick={(e) => { e.stopPropagation(); scrollToIndex(currentIndex === fotos.length - 1 ? 0 : currentIndex + 1); }} 
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-black w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md sm:flex hidden"
-          >
-            ▶
-          </button>
-
-          {/* Puntos Indicadores (Dots) */}
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-            {fotos.map((_: any, idx: number) => (
-              <div 
-                key={idx} 
-                className={`transition-all duration-300 rounded-full ${idx === currentIndex ? 'bg-black w-4 h-1.5' : 'bg-black/30 border border-white/50 w-1.5 h-1.5'}`} 
-              />
+            className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/90 text-black w-6 h-6 rounded-full items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm sm:flex hidden text-xs"
+          >▶</button>
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+            {fotos.map((_, idx: number) => (
+              <div key={idx} className={`transition-all duration-300 rounded-full ${idx === currentIndex ? 'bg-slate-800 w-3 h-1' : 'bg-slate-300 w-1 h-1'}`} />
             ))}
           </div>
         </>
@@ -86,9 +83,8 @@ const CarruselImagenes = ({ equipo }: { equipo: any }) => {
   );
 };
 
-
 // =====================================================================
-// PÁGINA PRINCIPAL
+// PÁGINA PRINCIPAL: TIENDA EQUIPOS
 // =====================================================================
 export default function TiendaEquipos() {
   const [equipos, setEquipos] = useState<any[]>([]);
@@ -98,13 +94,11 @@ export default function TiendaEquipos() {
   const [mostrarCarrito, setMostrarCarrito] = useState(false);
   const [busqueda, setBusqueda] = useState('');
 
-  // 1. Cargar el inventario (Solo Dispositivos con Stock)
   useEffect(() => {
     const cargarInventario = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`);
         const data = await res.json();
-        
         if (data.success && data.productos) {
           const disponibles = data.productos.filter((item: any) => 
             item.cantidad > 0 && item.tipo?.toUpperCase() === 'DISPOSITIVO'
@@ -120,7 +114,6 @@ export default function TiendaEquipos() {
     cargarInventario();
   }, []);
 
-  // 2. Buscador en tiempo real
   useEffect(() => {
     const filtrados = equipos.filter(equipo => 
       equipo.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
@@ -129,19 +122,17 @@ export default function TiendaEquipos() {
     setEquiposFiltrados(filtrados);
   }, [busqueda, equipos]);
 
-  // 3. Funciones del Carrito
   const agregarAlCarrito = (equipo: any) => {
     setCarrito(prev => {
       const existe = prev.find(item => item.id === equipo.id);
       if (existe) {
         if (existe.cantidad_carrito >= equipo.cantidad) {
-          alert('Has alcanzado el límite de stock disponible para este equipo exacto.');
+          alert('Has alcanzado el límite de stock de este equipo.');
           return prev;
         }
         return prev.map(item => item.id === equipo.id ? { ...item, cantidad_carrito: item.cantidad_carrito + 1 } : item);
-      } else {
-        return [...prev, { ...equipo, cantidad_carrito: 1 }];
       }
+      return [...prev, { ...equipo, cantidad_carrito: 1 }];
     });
     setMostrarCarrito(true); 
   };
@@ -152,106 +143,99 @@ export default function TiendaEquipos() {
 
   const totalCarrito = carrito.reduce((sum, item) => sum + (parseFloat(item.precio_venta) * item.cantidad_carrito), 0);
 
-  // 4. Checkout por WhatsApp
   const procesarPedidoWhatsApp = () => {
     if (carrito.length === 0) return;
-
-    let mensaje = `Buen día MovilPlace. Me interesa adquirir el siguiente equipo:\n\n`;
-    
+    let mensaje = `Buen día MovilPlace. Me interesa adquirir:\n\n`;
     carrito.forEach(item => {
       mensaje += `▪️ ${item.cantidad_carrito}x ${item.nombre}\n   SKU: ${item.sku}\n   Precio: $${item.precio_venta}\n\n`;
     });
-
-    mensaje += `*TOTAL ESTIMADO: $${totalCarrito.toFixed(2)}*\n\nMe gustaría confirmar la disponibilidad y el proceso de compra.`;
-
-    const url = `https://wa.me/526861764066?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
+    mensaje += `*TOTAL ESTIMADO: $${totalCarrito.toFixed(2)}*\n\nMe gustaría confirmar disponibilidad.`;
+    window.open(`https://wa.me/526861764066?text=${encodeURIComponent(mensaje)}`, '_blank');
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans pb-24">
-      
-      {/* MAGIA CSS: Ocultar barras de scroll del carrusel */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-      `}} />
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-24">
+      <style dangerouslySetInnerHTML={{__html: `.scrollbar-hide::-webkit-scrollbar { display: none; }`}} />
 
-      {/* NAVBAR MINIMALISTA PREMIUM */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 p-4 sm:px-8 flex justify-between items-center bg-white/90 backdrop-blur-md">
+      {/* NAVBAR GLASSMORPHISM */}
+      <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-4 sm:px-8 py-3 flex justify-between items-center shadow-sm">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-black">MOVILPLACE</h1>
-          <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest">Catálogo de Dispositivos</p>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-slate-900">MOVILPLACE</h1>
+          <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-widest">Tienda Oficial</p>
         </div>
         <button 
           onClick={() => setMostrarCarrito(true)}
-          className="relative p-3 text-2xl hover:bg-gray-100 transition-colors rounded-lg active:scale-95"
+          className="relative p-2 text-xl hover:bg-slate-100 transition-colors rounded-lg active:scale-95"
         >
           🛒
           {carrito.length > 0 && (
-            <span className="absolute top-1 right-1 bg-black text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">
+            <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
               {carrito.length}
             </span>
           )}
         </button>
       </nav>
 
-      {/* CABECERA Y BUSCADOR */}
-      <div className="pt-10 pb-8 px-4 sm:px-8 max-w-7xl mx-auto">
-        <h2 className="text-4xl sm:text-5xl font-black text-black mb-6 tracking-tight">Equipos Disponibles</h2>
-        <div className="relative max-w-3xl">
-          <span className="absolute left-5 top-4 text-gray-400 text-xl">🔍</span>
-          <input 
-            type="text" 
-            placeholder="Buscar modelo, marca o SKU..." 
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-14 pr-6 text-black text-lg font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all"
-          />
+      {/* HERO SECTION CON FONDO OSCURO (Da contraste y elegancia) */}
+      <div className="bg-slate-900 pt-10 pb-20 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-black text-white mb-6 tracking-tight">Catálogo de Equipos</h2>
+          <div className="relative max-w-2xl">
+            <span className="absolute left-4 top-3.5 text-slate-400 text-lg">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Buscar por modelo o SKU..." 
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full bg-white/10 border border-white/20 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-slate-400 text-sm font-medium outline-none focus:bg-white focus:text-slate-900 focus:placeholder-slate-500 transition-all shadow-lg"
+            />
+          </div>
         </div>
       </div>
 
-      {/* GRID DE DISPOSITIVOS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8">
+      {/* GRID DE DISPOSITIVOS (Subido ligeramente sobre el fondo oscuro) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 -mt-10 relative z-10">
         {loading ? (
-          <div className="text-center font-bold text-xl text-gray-400 mt-20 animate-pulse">Sincronizando inventario...</div>
+          <div className="text-center font-bold text-sm text-slate-400 mt-20 animate-pulse bg-white p-8 rounded-2xl shadow-sm inline-block mx-auto">
+            Sincronizando inventario...
+          </div>
         ) : equiposFiltrados.length === 0 ? (
-          <div className="text-center font-medium text-lg text-gray-500 mt-20 py-20 border border-gray-200 border-dashed rounded-xl">
-            No se encontraron dispositivos que coincidan con tu búsqueda.
+          <div className="text-center font-medium text-sm text-slate-500 mt-10 py-16 bg-white rounded-2xl shadow-sm border border-slate-100">
+            No se encontraron equipos con esa búsqueda.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
+          /* MAGIA DEL GRID: 2 columnas en celular, 3 en tablet, 4 en desktop, 5 en monitores muy grandes */
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-5">
             {equiposFiltrados.map((equipo) => (
-              <div key={equipo.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col group hover:border-black transition-colors duration-300">
+              <div key={equipo.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col group hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
                 
-                {/* ZONA DE IMAGEN CON CARRUSEL */}
-                <div className="aspect-[4/3] sm:aspect-square bg-gray-50 relative overflow-hidden border-b border-gray-100">
-                  
+                {/* ZONA DE IMAGEN COMPACTA */}
+                <div className="aspect-square bg-white relative overflow-hidden border-b border-slate-50">
                   <CarruselImagenes equipo={equipo} />
-
-                  {/* Badge Elegante */}
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur border border-gray-200 text-black text-[10px] font-black px-3 py-1 uppercase tracking-widest shadow-sm pointer-events-none">
+                  {/* Badge de Stock Pequeño */}
+                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur border border-slate-100 text-slate-800 text-[9px] font-black px-2 py-0.5 rounded shadow-sm pointer-events-none">
                     Stock: {equipo.cantidad}
                   </div>
                 </div>
 
-                {/* Info del Celular */}
-                <div className="p-6 sm:p-8 flex flex-col flex-grow justify-between bg-white">
-                  <div className="mb-8">
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ref: {equipo.sku}</p>
-                    <h3 className="font-black text-2xl text-black leading-tight tracking-tight">{equipo.nombre}</h3>
+                {/* INFO DEL CELULAR */}
+                <div className="p-4 flex flex-col flex-grow justify-between">
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">SKU: {equipo.sku}</p>
+                    {/* line-clamp-2 asegura que los títulos largos no rompan el grid */}
+                    <h3 className="font-bold text-sm leading-tight text-slate-800 line-clamp-2 mb-3 h-10">{equipo.nombre}</h3>
                   </div>
                   
-                  <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Precio Especial</span>
-                      <span className="text-3xl font-black text-black tracking-tighter">${parseFloat(equipo.precio_venta).toFixed(2)}</span>
+                  <div className="mt-auto pt-3 border-t border-slate-100 flex flex-col gap-3">
+                    <div className="flex justify-between items-end">
+                      <span className="text-lg font-black text-emerald-600 tracking-tight">${parseFloat(equipo.precio_venta).toFixed(2)}</span>
                     </div>
                     
                     <button 
                       onClick={() => agregarAlCarrito(equipo)}
-                      className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white font-bold py-4 px-8 text-sm uppercase tracking-wider active:scale-95 transition-all"
+                      className="w-full bg-slate-900 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition-colors shadow-md"
                     >
-                      Lo Quiero
+                      + Agregar
                     </button>
                   </div>
                 </div>
@@ -262,44 +246,45 @@ export default function TiendaEquipos() {
         )}
       </div>
 
-      {/* SIDEBAR DEL CARRITO PREMIUM */}
+      {/* SIDEBAR DEL CARRITO */}
       {mostrarCarrito && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white w-full max-w-lg h-full shadow-2xl flex flex-col animate-slideInRight border-l border-gray-200">
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col border-l border-slate-200">
             
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-white">
-              <div>
-                <h2 className="text-2xl font-black tracking-tight text-black">Cesta de Equipos</h2>
-              </div>
-              <button onClick={() => setMostrarCarrito(false)} className="text-gray-400 hover:text-black text-2xl transition-colors">✖</button>
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
+              <h2 className="text-xl font-black tracking-tight text-slate-900">Cesta de Equipos</h2>
+              <button onClick={() => setMostrarCarrito(false)} className="text-slate-400 hover:text-slate-800 text-xl transition-colors bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center">✖</button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-slate-50">
               {carrito.length === 0 ? (
-                <div className="text-center text-gray-400 mt-20 flex flex-col items-center">
-                  <span className="text-5xl mb-4 block opacity-50">🛒</span>
-                  <p className="font-medium text-lg">Tu cesta está vacía.</p>
+                <div className="text-center text-slate-400 mt-20 flex flex-col items-center">
+                  <span className="text-4xl mb-3 block opacity-50">🛒</span>
+                  <p className="font-medium text-sm">Tu cesta está vacía.</p>
                 </div>
               ) : (
                 carrito.map((item) => {
-                  // Extraer la primera foto de la galería para la miniatura
-                  const portada = Array.isArray(item.galeria) && item.galeria.length > 0 ? item.galeria[0] : item.imagen_url;
+                  let portada = item.imagen_url;
+                  if (Array.isArray(item.galeria) && item.galeria.length > 0) portada = item.galeria[0];
+                  else if (typeof item.galeria === 'string' && item.galeria.length > 2) {
+                    try { portada = item.galeria.replace(/^{|}$/g, '').replace(/"/g, '').split(',')[0].trim(); } catch(e){}
+                  }
 
                   return (
-                    <div key={item.id} className="flex gap-4 bg-white border border-gray-200 p-4 items-center">
-                      <div className="w-20 h-20 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center text-3xl border border-gray-100">
-                        {portada ? <img src={portada} className="w-full h-full object-cover" /> : '📱'}
+                    <div key={item.id} className="flex gap-3 bg-white border border-slate-100 p-3 items-center rounded-2xl shadow-sm">
+                      <div className="w-16 h-16 bg-white overflow-hidden shrink-0 flex items-center justify-center border border-slate-50 rounded-xl">
+                        {portada ? <img src={portada} className="w-full h-full object-contain p-1" /> : '📱'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">SKU: {item.sku}</p>
-                        <h4 className="font-black text-base leading-tight text-black mb-2 truncate">{item.nombre}</h4>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1">Cant: {item.cantidad_carrito}</span>
-                          <span className="font-black text-lg text-black">${parseFloat(item.precio_venta).toFixed(2)}</span>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">SKU: {item.sku}</p>
+                        <h4 className="font-bold text-sm leading-tight text-slate-800 mb-1 truncate">{item.nombre}</h4>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">Cant: {item.cantidad_carrito}</span>
+                          <span className="font-black text-sm text-emerald-600">${parseFloat(item.precio_venta).toFixed(2)}</span>
                         </div>
                       </div>
-                      <button onClick={() => eliminarDelCarrito(item.id)} className="text-gray-400 hover:text-red-500 p-2 transition-colors">
-                        <span className="text-xl">🗑️</span>
+                      <button onClick={() => eliminarDelCarrito(item.id)} className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <span className="text-lg">🗑️</span>
                       </button>
                     </div>
                   );
@@ -309,21 +294,21 @@ export default function TiendaEquipos() {
 
             {/* ZONA DE CHECKOUT */}
             {carrito.length > 0 && (
-              <div className="p-8 border-t border-gray-200 bg-white">
-                <div className="flex justify-between items-end mb-8">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Estimado</span>
-                  <span className="text-4xl font-black text-black tracking-tighter">${totalCarrito.toFixed(2)}</span>
+              <div className="p-6 border-t border-slate-100 bg-white">
+                <div className="flex justify-between items-end mb-5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Estimado</span>
+                  <span className="text-3xl font-black text-slate-900 tracking-tighter">${totalCarrito.toFixed(2)}</span>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <button 
                     onClick={procesarPedidoWhatsApp}
-                    className="w-full bg-black hover:bg-gray-800 text-white font-black py-5 text-sm uppercase tracking-widest active:scale-95 transition-transform flex justify-center items-center gap-3"
+                    className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white font-black py-4 rounded-xl text-sm uppercase tracking-widest active:scale-95 transition-transform flex justify-center items-center gap-2 shadow-lg shadow-green-500/20"
                   >
-                    💬 Contactar a Ventas
+                    💬 Contactar Ventas
                   </button>
-                  <p className="text-center text-xs font-medium text-gray-400 leading-relaxed">
-                    Serás redirigido a WhatsApp para confirmar la disponibilidad exacta y los detalles de entrega.
+                  <p className="text-center text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-wide">
+                    Confirma disponibilidad por WhatsApp
                   </p>
                 </div>
               </div>
