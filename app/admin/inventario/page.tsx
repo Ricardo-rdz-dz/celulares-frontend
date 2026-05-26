@@ -12,7 +12,7 @@ export default function InventarioDashboard() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [form, setForm] = useState({
-    nombre: '', sku: '', tipo: 'REFACCION', cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0'
+    nombre: '', sku: '', tipo: 'REFACCION', cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0', descripcion: ''
   });
 
   const cargarInventario = () => {
@@ -32,7 +32,8 @@ export default function InventarioDashboard() {
 
   const abrirModalCrear = () => {
     setEditandoId(null);
-    setForm({ nombre: '', sku: '', tipo: filtroTipo, cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0' });
+    setForm({ nombre: '', sku: '', tipo: filtroTipo, cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0', descripcion: '' });
+    setModalAbierto(true); 
     setModalAbierto(true);
   };
 
@@ -41,7 +42,7 @@ export default function InventarioDashboard() {
     setForm({
       nombre: p.nombre, sku: p.sku || '', tipo: p.tipo,
       cantidad: p.cantidad.toString(), stock_minimo: p.stock_minimo.toString(),
-      precio_compra: p.precio_compra.toString(), precio_venta: p.precio_venta.toString()
+      precio_compra: p.precio_compra.toString(), precio_venta: p.precio_venta.toString(), descripcion: p.descripcion || ''
     });
     setModalAbierto(true);
   };
