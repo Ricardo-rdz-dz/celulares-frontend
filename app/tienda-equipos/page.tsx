@@ -2,12 +2,11 @@
 import { useEffect, useState, useRef } from 'react';
 
 // =====================================================================
-// COMPONENTE: Carrusel Premium (Ajustado para tarjetas más pequeñas)
+// COMPONENTE: Carrusel Premium 
 // =====================================================================
 const CarruselImagenes = ({ equipo }: { equipo: any }) => {
   let fotos: string[] = [];
   
-  // Extraer fotos de forma segura
   if (Array.isArray(equipo.galeria) && equipo.galeria.length > 0) {
     fotos = equipo.galeria;
   } else if (typeof equipo.galeria === 'string' && equipo.galeria.length > 2) {
@@ -93,6 +92,9 @@ export default function TiendaEquipos() {
   const [loading, setLoading] = useState(true);
   const [mostrarCarrito, setMostrarCarrito] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  
+  // ✨ NUEVO ESTADO: Controla qué equipo está abierto en la ventana de detalles
+  const [equipoSeleccionado, setEquipoSeleccionado] = useState<any | null>(null);
 
   useEffect(() => {
     const cargarInventario = async () => {
@@ -135,6 +137,7 @@ export default function TiendaEquipos() {
       return [...prev, { ...equipo, cantidad_carrito: 1 }];
     });
     setMostrarCarrito(true); 
+    setEquipoSeleccionado(null); // Cierra el modal si estaba abierto
   };
 
   const eliminarDelCarrito = (id: string) => {
@@ -157,7 +160,7 @@ export default function TiendaEquipos() {
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-24">
       <style dangerouslySetInnerHTML={{__html: `.scrollbar-hide::-webkit-scrollbar { display: none; }`}} />
 
-      {/* NAVBAR GLASSMORPHISM */}
+      {/* NAVBAR */}
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-4 sm:px-8 py-3 flex justify-between items-center shadow-sm">
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-slate-900">MOVILPLACE</h1>
@@ -176,7 +179,7 @@ export default function TiendaEquipos() {
         </button>
       </nav>
 
-      {/* HERO SECTION CON FONDO OSCURO (Da contraste y elegancia) */}
+      {/* HERO SECTION */}
       <div className="bg-slate-900 pt-10 pb-20 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-6 tracking-tight">Catálogo de Equipos</h2>
@@ -193,7 +196,7 @@ export default function TiendaEquipos() {
         </div>
       </div>
 
-      {/* GRID DE DISPOSITIVOS (Subido ligeramente sobre el fondo oscuro) */}
+      {/* GRID DE DISPOSITIVOS */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 -mt-10 relative z-10">
         {loading ? (
           <div className="text-center font-bold text-sm text-slate-400 mt-20 animate-pulse bg-white p-8 rounded-2xl shadow-sm inline-block mx-auto">
@@ -204,25 +207,24 @@ export default function TiendaEquipos() {
             No se encontraron equipos con esa búsqueda.
           </div>
         ) : (
-          /* MAGIA DEL GRID: 2 columnas en celular, 3 en tablet, 4 en desktop, 5 en monitores muy grandes */
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-5">
             {equiposFiltrados.map((equipo) => (
-              <div key={equipo.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col group hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <div 
+                key={equipo.id} 
+                onClick={() => setEquipoSeleccionado(equipo)} // ✨ Abre el modal al cliquear la tarjeta
+                className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col group hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer"
+              >
                 
-                {/* ZONA DE IMAGEN COMPACTA */}
                 <div className="aspect-square bg-white relative overflow-hidden border-b border-slate-50">
                   <CarruselImagenes equipo={equipo} />
-                  {/* Badge de Stock Pequeño */}
                   <div className="absolute top-2 right-2 bg-white/90 backdrop-blur border border-slate-100 text-slate-800 text-[9px] font-black px-2 py-0.5 rounded shadow-sm pointer-events-none">
                     Stock: {equipo.cantidad}
                   </div>
                 </div>
 
-                {/* INFO DEL CELULAR */}
                 <div className="p-4 flex flex-col flex-grow justify-between">
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">SKU: {equipo.sku}</p>
-                    {/* line-clamp-2 asegura que los títulos largos no rompan el grid */}
                     <h3 className="font-bold text-sm leading-tight text-slate-800 line-clamp-2 mb-3 h-10">{equipo.nombre}</h3>
                   </div>
                   
@@ -232,7 +234,10 @@ export default function TiendaEquipos() {
                     </div>
                     
                     <button 
-                      onClick={() => agregarAlCarrito(equipo)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // ✨ Evita que se abra el modal si solo querían agregarlo directo
+                        agregarAlCarrito(equipo);
+                      }}
                       className="w-full bg-slate-900 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider active:scale-95 transition-colors shadow-md"
                     >
                       + Agregar
@@ -246,7 +251,71 @@ export default function TiendaEquipos() {
         )}
       </div>
 
-      {/* SIDEBAR DEL CARRITO */}
+      {/* ✨ VENTANA MODAL DE DETALLES DEL PRODUCTO */}
+      {equipoSeleccionado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative max-h-[90vh]">
+            
+            {/* Botón de cerrar flotante (Móvil y Desktop) */}
+            <button 
+              onClick={() => setEquipoSeleccionado(null)} 
+              className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-slate-100 text-slate-800 w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm backdrop-blur transition-colors"
+            >
+              ✖
+            </button>
+
+            {/* Lado Izquierdo: Galería Grande */}
+            <div className="w-full md:w-1/2 bg-slate-50 relative aspect-square md:aspect-auto border-b md:border-b-0 md:border-r border-slate-200">
+              <CarruselImagenes equipo={equipoSeleccionado} />
+            </div>
+
+            {/* Lado Derecho: Información Detallada */}
+            <div className="w-full md:w-1/2 p-6 sm:p-10 flex flex-col overflow-y-auto">
+              <div>
+                <span className="inline-block bg-slate-100 text-slate-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-4">
+                  SKU: {equipoSeleccionado.sku}
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight mb-4">
+                  {equipoSeleccionado.nombre}
+                </h2>
+                <div className="flex items-center gap-4 mb-8">
+                  <span className="text-4xl font-black text-emerald-600 tracking-tighter">
+                    ${parseFloat(equipoSeleccionado.precio_venta).toFixed(2)}
+                  </span>
+                  <span className="text-sm font-bold text-slate-400 border-l border-slate-200 pl-4">
+                    Stock disponible: {equipoSeleccionado.cantidad}
+                  </span>
+                </div>
+              </div>
+
+              {/* Sección de Descripción Detallada */}
+              <div className="flex-1 mb-8">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">
+                  Detalles del Equipo
+                </h3>
+                <div className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
+                  {equipoSeleccionado.descripcion ? (
+                    equipoSeleccionado.descripcion
+                  ) : (
+                    <span className="italic opacity-60">Sin descripción detallada para este artículo.</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Botón de Acción Principal en el Modal */}
+              <button 
+                onClick={() => agregarAlCarrito(equipoSeleccionado)}
+                className="w-full bg-slate-900 hover:bg-emerald-600 text-white font-black py-4 rounded-2xl text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg"
+              >
+                Añadir a la Cesta
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* SIDEBAR DEL CARRITO (Se mantiene igual) */}
       {mostrarCarrito && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col border-l border-slate-200">
@@ -292,27 +361,24 @@ export default function TiendaEquipos() {
               )}
             </div>
 
-            {/* ZONA DE CHECKOUT */}
-            {carrito.length > 0 && (
-              <div className="p-6 border-t border-slate-100 bg-white">
-                <div className="flex justify-between items-end mb-5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Estimado</span>
-                  <span className="text-3xl font-black text-slate-900 tracking-tighter">${totalCarrito.toFixed(2)}</span>
-                </div>
-
-                <div className="space-y-3">
-                  <button 
-                    onClick={procesarPedidoWhatsApp}
-                    className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white font-black py-4 rounded-xl text-sm uppercase tracking-widest active:scale-95 transition-transform flex justify-center items-center gap-2 shadow-lg shadow-green-500/20"
-                  >
-                    💬 Contactar Ventas
-                  </button>
-                  <p className="text-center text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-wide">
-                    Confirma disponibilidad por WhatsApp
-                  </p>
-                </div>
+            <div className="p-6 border-t border-slate-100 bg-white">
+              <div className="flex justify-between items-end mb-5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Estimado</span>
+                <span className="text-3xl font-black text-slate-900 tracking-tighter">${totalCarrito.toFixed(2)}</span>
               </div>
-            )}
+
+              <div className="space-y-3">
+                <button 
+                  onClick={procesarPedidoWhatsApp}
+                  className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white font-black py-4 rounded-xl text-sm uppercase tracking-widest active:scale-95 transition-transform flex justify-center items-center gap-2 shadow-lg shadow-green-500/20"
+                >
+                  💬 Contactar Ventas
+                </button>
+                <p className="text-center text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-wide">
+                  Confirma disponibilidad por WhatsApp
+                </p>
+              </div>
+            </div>
 
           </div>
         </div>
