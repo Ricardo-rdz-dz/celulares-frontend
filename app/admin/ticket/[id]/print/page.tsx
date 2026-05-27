@@ -1,4 +1,4 @@
-// recibo final de reparacion 
+//recibo final de reparacion de dispositivos
 'use client';
 
 import { useEffect, useState, use } from 'react';
@@ -26,6 +26,7 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
   }, [ticketId]);
 
   useEffect(() => {
+    // Esperamos a que los 2 QRs terminen de cargar para lanzar la impresión
     if (ticket && qrsCargados >= 2) {
       setTimeout(() => {
         window.print();
@@ -53,8 +54,8 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
 
       {/* BOTONES */}
       <div className="mb-4 flex gap-4 print-hidden">
-        <button onClick={() => router.push('/admin')} className="border px-4 py-2 rounded">⬅️ Volver</button>
-        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold">🖨️ Imprimir Recibo</button>
+        <button onClick={() => router.push('/admin')} className="border px-4 py-2 rounded hover:bg-gray-50 transition">⬅️ Volver</button>
+        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold hover:bg-emerald-700 transition">🖨️ Imprimir Recibo</button>
       </div>
 
       {/* CONTENEDOR CARTA COMPLETO */}
@@ -68,7 +69,7 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
             Blvd. Adolfo Lopez Mateos y Calle Hiper Calafia (Soriana Hiper)
           </p>
           <div className="flex justify-center gap-2 text-[8px] font-bold mt-0.5 text-gray-600">
-            <span>Ventas: 686 176 4066</span> | <span>Reparaciones: 686 172 0406</span> | <span>Desloqueos: 686 168 7729</span>
+            <span>Ventas: 686 176 4066</span> | <span>Reparaciones: 686 172 0406</span> | <span>Desbloqueos: 686 168 7729</span>
           </div>
         </div>
 
@@ -106,27 +107,58 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
           <p>• Es indispensable presentar este recibo original para hacer válida cualquier reclamación.</p>
         </div>
 
-        {/* QRS Y FIRMAS (mt-auto los empuja al final de la hoja) */}
-        <div className="grid grid-cols-2 gap-6 mt-auto pt-4 border-t-2 border-black">
+        {/* FIRMAS Y QRS CENTRADOS (mt-auto empuja esto al fondo de la hoja) */}
+        <div className="flex flex-col justify-end mt-auto gap-8 pt-4">
           
-          <div className="flex gap-4 items-center">
-            <div className="text-center">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
-              <p className="text-[9px] font-bold mt-1">ENCUESTA DE SATISFACCIÓN</p>
+          {/* SECCIÓN DE FIRMAS */}
+          <div className="grid grid-cols-2 gap-16 px-12 text-center text-[10px] font-bold">
+            <div>
+              <div className="border-b-2 border-black h-12 mb-1"></div>
+              Firma de Conformidad Cliente
             </div>
-            <div className="text-center">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
-              <p className="text-[9px] font-bold mt-1">CALIFÍCANOS EN GOOGLE</p>
+            <div>
+              <div className="border-b-2 border-black h-12 mb-1"></div>
+              Firma Asesor MovilPlace
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-center text-[10px] font-bold">
-            <div><div className="border-b-2 border-black h-16"></div>Firma Cliente</div>
-            <div><div className="border-b-2 border-black h-16"></div>Firma Asesor</div>
+          {/* SECCIÓN DE QRS (Banner destacado) */}
+          <div className="bg-gray-50 border-2 border-dashed border-gray-400 p-4 rounded-2xl flex items-center justify-center gap-8 mx-4">
+            
+            {/* Encuesta QR */}
+            <div className="flex flex-col items-center text-center">
+              <p className="text-[10px] font-black uppercase mb-1.5 text-gray-800">¿Cómo nos fue?</p>
+              <img 
+                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://forms.gle/TdJQcXYvyqJias5p6" 
+                className="w-24 h-24 p-1 bg-white border border-gray-300 shadow-sm" 
+                onLoad={() => setQrsCargados(prev => prev + 1)}
+              />
+              <p className="text-[8px] font-bold mt-1.5 text-gray-500 uppercase tracking-widest">Encuesta Rápida</p>
+            </div>
+
+            {/* Mensaje Central CTA */}
+            <div className="text-center max-w-[200px]">
+              <span className="text-3xl block mb-2">⭐</span>
+              <p className="text-[12px] font-black text-gray-800 leading-tight mb-1">¡Ayúdanos a seguir mejorando!</p>
+              <p className="text-[10px] text-gray-600 font-medium leading-snug">Escanea con la cámara de tu celular y cuéntanos tu experiencia.</p>
+            </div>
+
+            {/* Google QR (Ajustado con API válida para evitar bloqueos) */}
+            <div className="flex flex-col items-center text-center">
+              <p className="text-[10px] font-black uppercase mb-1.5 text-gray-800">Califícanos</p>
+              <img 
+                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://maps.google.com" 
+                className="w-24 h-24 p-1 bg-white border border-gray-300 shadow-sm" 
+                onLoad={() => setQrsCargados(prev => prev + 1)}
+              />
+              <p className="text-[8px] font-bold mt-1.5 text-gray-500 uppercase tracking-widest">Reseña en Google</p>
+            </div>
+
           </div>
+
+          <p className="text-center font-black uppercase text-xl mt-2 tracking-widest">¡Gracias por tu preferencia!</p>
         </div>
 
-        <p className="text-center font-black uppercase text-xl">¡Gracias por tu preferencia!</p>
       </div>
     </div>
   );
