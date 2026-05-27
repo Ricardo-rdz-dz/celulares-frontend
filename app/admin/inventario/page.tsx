@@ -8,11 +8,16 @@ export default function InventarioDashboard() {
   const [loading, setLoading] = useState(true);
   const [filtroTipo, setFiltroTipo] = useState<'REFACCION' | 'DISPOSITIVO'>('REFACCION');
   
-  // Estados para el formulario modal (✨ Se agregó descripcion)
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  
+  // ✨ NUEVO ESTADO: Para controlar la animación de carga de la foto
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+
   const [form, setForm] = useState({
-    nombre: '', sku: '', tipo: 'REFACCION', cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0', descripcion: ''
+    nombre: '', sku: '', tipo: 'REFACCION', cantidad: '0', stock_minimo: '3', 
+    precio_compra: '0', precio_venta: '0', descripcion: '',
+    color: '', imei: '', numero_serie: '', imagen_url: ''
   });
 
   const cargarInventario = () => {
@@ -32,7 +37,11 @@ export default function InventarioDashboard() {
 
   const abrirModalCrear = () => {
     setEditandoId(null);
-    setForm({ nombre: '', sku: '', tipo: filtroTipo, cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0', descripcion: '' });
+    setForm({ 
+      nombre: '', sku: '', tipo: filtroTipo, cantidad: '0', stock_minimo: '3', 
+      precio_compra: '0', precio_venta: '0', descripcion: '',
+      color: '', imei: '', numero_serie: '', imagen_url: '' 
+    });
     setModalAbierto(true);
   };
 
@@ -46,9 +55,51 @@ export default function InventarioDashboard() {
       stock_minimo: p.stock_minimo.toString(),
       precio_compra: p.precio_compra.toString(), 
       precio_venta: p.precio_venta.toString(),
-      descripcion: p.descripcion || '' // ✨ Carga la descripción si existe
+      descripcion: p.descripcion || '',
+      color: p.color || '',              
+      imei: p.imei || '',                
+      numero_serie: p.numero_serie || '',
+      imagen_url: p.imagen_url || ''     
     });
     setModalAbierto(true);
+  };
+
+  // ✨ NUEVA FUNCIÓN: Procesa el archivo, lo hace base64 y lo manda al endpoint de subida
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSubiendoFoto(true);
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = async () => {
+      const base64Data = reader.result as string;
+
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base64: base64Data,
+            name: file.name,
+            type: file.type
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.url) {
+          setForm(prev => ({ ...prev, imagen_url: data.url }));
+        } else {
+          alert('Error al subir la imagen al servidor');
+        }
+      } catch (err) {
+        console.error("Error en la petición de subida:", err);
+        alert('Error de conexión al subir la imagen.');
+      } finally {
+        setSubiendoFoto(false);
+      }
+    };
   };
 
   const handleGuardar = async (e: React.FormEvent) => {
@@ -68,8 +119,11 @@ export default function InventarioDashboard() {
           cantidad: parseInt(form.cantidad),
           stock_minimo: parseInt(form.stock_minimo),
           precio_compra: parseFloat(form.precio_compra),
-          precio_venta: parseFloat(form.precio_venta)
-          // La descripción ya va incluida dentro de ...form como texto
+          precio_venta: parseFloat(form.precio_venta),
+          color: form.tipo === 'DISPOSITIVO' ? form.color : null,
+          imei: form.tipo === 'DISPOSITIVO' ? form.imei : null,
+          numero_serie: form.tipo === 'DISPOSITIVO' ? form.numero_serie : null,
+          imagen_url: form.tipo === 'DISPOSITIVO' ? form.imagen_url : null
         })
       });
 
@@ -158,18 +212,24 @@ export default function InventarioDashboard() {
                       <td className="p-4 font-bold text-slate-900">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
+                            {p.tipo === 'DISPOSITIVO' && p.imagen_url && <span title="Tiene fotografía">🖼️</span>}
                             {p.nombre}
                             {esAlertaStock && (
-                              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black uppercase rounded-full tracking-widest animate-pulse" title="Resurtido Requerido">
+                              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black uppercase rounded-full tracking-widest animate-pulse">
                                 ⚠️ STOCK BAJO
                               </span>
                             )}
                           </div>
-                          {/* Pequeño indicador visual si tiene descripción */}
                           {p.descripcion && (
                             <span className="text-[10px] text-slate-400 font-normal truncate max-w-[200px]">
                               📝 {p.descripcion}
                             </span>
+                          )}
+                          {p.tipo === 'DISPOSITIVO' && (
+                            <div className="flex gap-2 text-[9px] font-mono text-blue-600 mt-1">
+                              {p.color && <span>Color: {p.color}</span>}
+                              {p.imei && <span>IMEI: {p.imei}</span>}
+                            </div>
                           )}
                         </div>
                       </td>
@@ -191,10 +251,10 @@ export default function InventarioDashboard() {
           )}
         </div>
 
-        {/* MODAL CRUD (Crear/Editar) */}
+        {/* MODAL CRUD */}
         {modalAbierto && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full overflow-hidden animate-fadeIn">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-xl w-full overflow-hidden animate-fadeIn">
               <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">{editandoId ? '✏️ Modificar Artículo' : '📦 Registrar en Almacén'}</h3>
                 <button onClick={() => setModalAbierto(false)} className="text-slate-400 hover:text-slate-600 text-sm">✕</button>
@@ -220,17 +280,49 @@ export default function InventarioDashboard() {
                   </div>
                 </div>
 
-                {/* ✨ NUEVO: Campo de Descripción */}
+                {/* DATOS ESPECÍFICOS DE DISPOSITIVOS */}
+                {form.tipo === 'DISPOSITIVO' && (
+                  <div className="border border-blue-200 bg-blue-50/30 rounded-lg p-4 space-y-4 my-2">
+                    <h4 className="font-black text-blue-600 uppercase tracking-widest text-[10px] mb-2 border-b border-blue-100 pb-1">📱 Especificaciones del Equipo</h4>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-slate-500 uppercase tracking-wider mb-1 text-[10px]">Color</label>
+                        <input type="text" value={form.color} onChange={e => setForm({...form, color: e.target.value})} placeholder="Ej. Negro Mate" className="w-full bg-white border border-slate-200 rounded-lg p-2 font-medium outline-none text-xs focus:border-blue-400" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-slate-500 uppercase tracking-wider mb-1 text-[10px]">IMEI (15 dígitos)</label>
+                        <input type="text" value={form.imei} onChange={e => setForm({...form, imei: e.target.value})} placeholder="Opcional" className="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono outline-none text-xs focus:border-blue-400" />
+                      </div>
+                      <div className="md:col-span-3">
+                        <label className="block text-slate-500 uppercase tracking-wider mb-1 text-[10px]">Número de Serie</label>
+                        <input type="text" value={form.numero_serie} onChange={e => setForm({...form, numero_serie: e.target.value})} placeholder="Opcional" className="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono outline-none text-xs focus:border-blue-400" />
+                      </div>
+                    </div>
+
+                    {/* ✨ ACTUALIZADO: CARGADOR DE IMAGEN NATIVO AL BUCKET */}
+                    <div className="pt-2 border-t border-slate-200/60 mt-2">
+                      <label className="block text-slate-500 uppercase tracking-wider mb-2 text-[10px]">Fotografía del Dispositivo</label>
+                      <div className="flex items-center gap-4">
+                        <label className="cursor-pointer bg-blue-600 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm hover:bg-blue-500 transition-all inline-block">
+                          {subiendoFoto ? '⏳ Subiendo a Supabase...' : '📁 Seleccionar Imagen'}
+                          <input type="file" accept="image/*" disabled={subiendoFoto} className="hidden" onChange={handleFileChange} />
+                        </label>
+                        
+                        {/* Pequeña miniatura de vista previa si ya se subió la imagen */}
+                        {form.imagen_url && (
+                          <div className="relative w-12 h-12 border rounded-lg overflow-hidden bg-white shadow-sm">
+                            <img src={form.imagen_url} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="border-t pt-3 border-slate-100">
                   <label className="block text-slate-500 uppercase tracking-wider mb-1">Descripción Detallada (Opcional)</label>
-                  <textarea 
-                    rows={4} 
-                    value={form.descripcion} 
-                    onChange={e => setForm({...form, descripcion: e.target.value})} 
-                    placeholder="Describe el estado del equipo, estética, si incluye cargador original, detalles de garantía..." 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium outline-none text-sm focus:bg-white resize-y" 
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1 font-normal">Este texto será visible para tus clientes en la tienda web al hacer clic en el equipo.</p>
+                  <textarea rows={form.tipo === 'DISPOSITIVO' ? 2 : 4} value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} placeholder="Describe el estado del equipo, estética, detalles de garantía..." className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium outline-none text-sm focus:bg-white resize-y" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 border-t pt-3 border-slate-100">
@@ -257,7 +349,7 @@ export default function InventarioDashboard() {
                 
                 <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
                   <button type="button" onClick={() => setModalAbierto(false)} className="px-4 py-2 border rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
-                  <button type="submit" className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm">Guardar Cambios</button>
+                  <button type="submit" disabled={subiendoFoto} className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm disabled:opacity-50">Guardar Cambios</button>
                 </div>
               </form>
 
