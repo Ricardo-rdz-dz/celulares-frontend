@@ -1,270 +1,371 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function InventarioDashboard() {
+export default function PuntoDeVenta() {
   const router = useRouter();
-  const [productos, setProductos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filtroTipo, setFiltroTipo] = useState<'REFACCION' | 'DISPOSITIVO'>('REFACCION');
   
-  // Estados para el formulario modal (✨ Se agregó descripcion)
-  const [modalAbierto, setModalAbierto] = useState(false);
-  const [editandoId, setEditandoId] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    nombre: '', sku: '', tipo: 'REFACCION', cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0', descripcion: ''
+  const [inventario, setInventario] = useState<any[]>([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [producto, setProducto] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [cargandoCatalogo, setCargandoCatalogo] = useState(true);
+  
+  const [clientesBd, setClientesBd] = useState<any[]>([]);
+  
+  // ✨ NUEVO ESTADO: Vendedor activo
+  const [vendedorActivo, setVendedorActivo] = useState('Admin');
+
+  const [formVenta, setFormVenta] = useState({
+    metodo_pago: 'Efectivo',
+    detalles_extras: 'Solo equipo (Sin accesorios)',
+    cantidad: 1,
+    comision_monto: '' // ✨ NUEVO: Campo para la comisión
   });
 
-  const cargarInventario = () => {
-    setLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`)
-      .then(res => res.json())
-      .then(data => {
-        setProductos(data.productos || []);
-        setLoading(false);
-      })
-      .catch(err => console.error(err));
-  };
+  const [formCliente, setFormCliente] = useState({
+    telefono: '',
+    nombre: '',
+    id: null as string | null
+  });
 
   useEffect(() => {
-    cargarInventario();
+    // ✨ LEER SESIÓN ACTIVA PARA EL VENDEDOR
+    const sesionGuardada = localStorage.getItem('movilplace_user');
+    if (sesionGuardada) {
+      try {
+        const usuario = JSON.parse(sesionGuardada);
+        setVendedorActivo(usuario.nombre || usuario.name || 'Admin');
+      } catch (error) {
+        setVendedorActivo(sesionGuardada);
+      }
+    }
+
+    const cargarDatos = async () => {
+      try {
+        const [resInv, resCli] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/crm`)
+        ]);
+
+        if (resInv.ok) {
+          const dataInv = await resInv.json();
+          setInventario(dataInv.productos || (Array.isArray(dataInv) ? dataInv : []));
+        }
+
+        if (resCli.ok) {
+          const dataCli = await resCli.json();
+          setClientesBd(dataCli.clientes || []);
+        }
+      } catch (err) {
+        console.error("Error al cargar datos", err);
+      }
+      setCargandoCatalogo(false);
+    };
+    cargarDatos();
   }, []);
 
-  const abrirModalCrear = () => {
-    setEditandoId(null);
-    setForm({ nombre: '', sku: '', tipo: filtroTipo, cantidad: '0', stock_minimo: '3', precio_compra: '0', precio_venta: '0', descripcion: '' });
-    setModalAbierto(true);
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const tel = e.target.value.replace(/\D/g, ''); 
+    const clienteExistente = clientesBd.find(c => String(c.telefono).includes(tel) && tel.length >= 10);
+
+    if (clienteExistente) {
+      setFormCliente({ telefono: tel, nombre: clienteExistente.nombre, id: clienteExistente.id });
+    } else {
+      setFormCliente(prev => ({ ...prev, telefono: tel, id: null }));
+    }
   };
 
-  const abrirModalEditar = (p: any) => {
-    setEditandoId(p.id);
-    setForm({
-      nombre: p.nombre, 
-      sku: p.sku || '', 
-      tipo: p.tipo,
-      cantidad: p.cantidad.toString(), 
-      stock_minimo: p.stock_minimo.toString(),
-      precio_compra: p.precio_compra.toString(), 
-      precio_venta: p.precio_venta.toString(),
-      descripcion: p.descripcion || '' // ✨ Carga la descripción si existe
-    });
-    setModalAbierto(true);
-  };
-
-  const handleGuardar = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const url = editandoId 
-      ? `${process.env.NEXT_PUBLIC_API_URL}/inventario/${editandoId}`
-      : `${process.env.NEXT_PUBLIC_API_URL}/inventario`;
-    
-    const method = editandoId ? 'PUT' : 'POST';
+  const procesarVenta = async () => {
+    if (!producto) return;
+    setLoading(true);
 
     try {
-      const res = await fetch(url, {
-        method,
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ventas`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          cantidad: parseInt(form.cantidad),
-          stock_minimo: parseInt(form.stock_minimo),
-          precio_compra: parseFloat(form.precio_compra),
-          precio_venta: parseFloat(form.precio_venta)
-          // La descripción ya va incluida dentro de ...form como texto
+          producto_id: producto.id,
+          cantidad: formVenta.cantidad,
+          precio_unitario: producto.precio_venta,
+          metodo_pago: formVenta.metodo_pago,
+          detalles_regalo_accesorios: formVenta.detalles_extras,
+          cliente_id: formCliente.id,
+          cliente_nombre: formCliente.nombre || 'Público en General',
+          cliente_telefono: formCliente.telefono,
+          vendedor: vendedorActivo, // ✨ ENVIAMOS EL VENDEDOR
+          comision_monto: formVenta.comision_monto ? parseFloat(formVenta.comision_monto) : 0 // ✨ ENVIAMOS LA COMISIÓN
         })
       });
 
-      if (res.ok) {
-        setModalAbierto(false);
-        cargarInventario();
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        router.push(`/admin/pos/ticket/${data.venta_id}`);
       } else {
-        alert('Ocurrió un error al procesar el artículo.');
+        alert(`Error al guardar: ${data.error}`);
       }
     } catch (err) {
       console.error(err);
+      alert('Error de conexión al procesar la venta.');
     }
+    setLoading(false);
   };
 
-  const handleEliminar = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este artículo del almacén?')) return;
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario/${id}`, { method: 'DELETE' });
-      if (res.ok) cargarInventario();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const inventarioFiltrado = inventario.filter(item => 
+    item.nombre?.toLowerCase().includes(busqueda.toLowerCase()) || 
+    item.sku?.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
-  const productosFiltrados = productos.filter(p => p.tipo === filtroTipo);
+  const categoriasOrdenadas = ['Celulares', 'Tablets', 'Smartwatch', 'Audífonos', 'Laptops', 'DISPOSITIVO', 'REFACCION'];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-800 p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center py-12 px-6">
+      
+      <div className="max-w-4xl w-full mb-6 flex justify-between items-center">
+        <button onClick={() => router.push('/admin')} className="text-slate-400 hover:text-white font-bold transition">
+          ⬅️ Volver al panel
+        </button>
+        <div className="flex gap-3 items-center">
+          <span className="text-xs text-slate-400 font-bold bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            👤 Vendedor: {vendedorActivo}
+          </span>
+          <button 
+            onClick={() => router.push('/admin/pos/historial')} 
+            className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl border border-slate-700 transition"
+          >
+            📋 Historial Ventas
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
         
-        {/* CABECERA */}
-        <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div>
-            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">📦 Gestión de Almacén</h1>
-            <p className="text-xs text-slate-400 mt-0.5">Control de refacciones para taller y dispositivos de venta directa</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => router.push('/admin')} className="text-xs font-bold border border-slate-200 px-4 py-2.5 rounded-lg hover:bg-slate-50 transition-all">
-              Volver al Panel
-            </button>
-            <button onClick={abrirModalCrear} className="text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 px-4 py-2.5 rounded-lg transition-all shadow-sm">
-              + Agregar Artículo
-            </button>
-          </div>
-        </div>
-
-        {/* SELECTOR DE CATEGORÍA DE STOCK */}
-        <div className="flex border-b border-slate-200">
-          <button 
-            onClick={() => setFiltroTipo('REFACCION')}
-            className={`px-6 py-3 font-bold text-xs uppercase tracking-wider transition-all border-b-2 ${filtroTipo === 'REFACCION' ? 'border-red-600 text-slate-900 bg-white rounded-t-lg' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-          >
-            🔧 Refacciones para Reparación
-          </button>
-          <button 
-            onClick={() => setFiltroTipo('DISPOSITIVO')}
-            className={`px-6 py-3 font-bold text-xs uppercase tracking-wider transition-all border-b-2 ${filtroTipo === 'DISPOSITIVO' ? 'border-blue-600 text-slate-900 bg-white rounded-t-lg' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-          >
-            🛍️ Dispositivos para Venta
-          </button>
-        </div>
-
-        {/* TABLA DE PRODUCTOS */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="text-center py-16 text-xs text-slate-400 animate-pulse font-medium">Sincronizando inventario con la base de datos...</div>
-          ) : productosFiltrados.length === 0 ? (
-            <div className="text-center py-16 text-xs text-slate-400">No hay artículos registrados en esta sección de stock.</div>
-          ) : (
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-100 text-slate-400 uppercase tracking-wider font-bold">
-                <tr>
-                  <th className="p-4">Artículo</th>
-                  <th className="p-4">SKU / Identificador</th>
-                  <th className="p-4 text-center">Cantidad</th>
-                  <th className="p-4 text-right">Costo Compra</th>
-                  <th className="p-4 text-right">Precio Público</th>
-                  <th className="p-4 text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium">
-                {productosFiltrados.map((p) => {
-                  const esAlertaStock = p.cantidad <= p.stock_minimo;
-                  return (
-                    <tr key={p.id} className={`hover:bg-slate-50 transition-colors ${esAlertaStock ? 'bg-red-50/40' : ''}`}>
-                      <td className="p-4 font-bold text-slate-900">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            {p.nombre}
-                            {esAlertaStock && (
-                              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[9px] font-black uppercase rounded-full tracking-widest animate-pulse" title="Resurtido Requerido">
-                                ⚠️ STOCK BAJO
-                              </span>
-                            )}
-                          </div>
-                          {/* Pequeño indicador visual si tiene descripción */}
-                          {p.descripcion && (
-                            <span className="text-[10px] text-slate-400 font-normal truncate max-w-[200px]">
-                              📝 {p.descripcion}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 font-mono text-slate-500">{p.sku || 'N/A'}</td>
-                      <td className={`p-4 text-center font-black text-sm ${esAlertaStock ? 'text-red-600' : 'text-slate-800'}`}>
-                        {p.cantidad} <span className="text-[10px] text-slate-400 font-normal">/ min: {p.stock_minimo}</span>
-                      </td>
-                      <td className="p-4 text-right font-mono text-slate-600">${Number(p.precio_compra).toFixed(2)}</td>
-                      <td className="p-4 text-right font-mono text-emerald-700 font-bold">${Number(p.precio_venta).toFixed(2)}</td>
-                      <td className="p-4 text-center space-x-2">
-                        <button onClick={() => abrirModalEditar(p)} className="text-slate-600 hover:text-slate-900 font-bold border px-2.5 py-1 rounded hover:bg-white bg-slate-50">Editar</button>
-                        <button onClick={() => handleEliminar(p.id)} className="text-red-600 hover:text-red-900 font-bold border border-red-100 px-2.5 py-1 rounded hover:bg-red-50">Borrar</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* MODAL CRUD (Crear/Editar) */}
-        {modalAbierto && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full overflow-hidden animate-fadeIn">
-              <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="font-bold text-sm text-slate-900 uppercase tracking-tight">{editandoId ? '✏️ Modificar Artículo' : '📦 Registrar en Almacén'}</h3>
-                <button onClick={() => setModalAbierto(false)} className="text-slate-400 hover:text-slate-600 text-sm">✕</button>
-              </div>
-              
-              <form onSubmit={handleGuardar} className="p-6 space-y-4 text-xs font-semibold max-h-[80vh] overflow-y-auto">
-                <div>
-                  <label className="block text-slate-500 uppercase tracking-wider mb-1">Nombre del Producto / Refacción</label>
-                  <input type="text" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} placeholder="Ej. Pantalla Original Moto G Play 2024" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium outline-none text-sm focus:bg-white" />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-500 uppercase tracking-wider mb-1">SKU / Clave Interna</label>
-                    <input type="text" value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} placeholder="Opcional" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono outline-none text-sm focus:bg-white" />
-                  </div>
-                  <div>
-                    <label className="block text-slate-500 uppercase tracking-wider mb-1">Clasificación</label>
-                    <select value={form.tipo} onChange={e => setForm({...form, tipo: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold outline-none text-sm focus:bg-white">
-                      <option value="REFACCION">🔧 Refacción (Taller)</option>
-                      <option value="DISPOSITIVO">🛍️ Dispositivo (Venta)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* ✨ NUEVO: Campo de Descripción */}
-                <div className="border-t pt-3 border-slate-100">
-                  <label className="block text-slate-500 uppercase tracking-wider mb-1">Descripción Detallada (Opcional)</label>
-                  <textarea 
-                    rows={4} 
-                    value={form.descripcion} 
-                    onChange={e => setForm({...form, descripcion: e.target.value})} 
-                    placeholder="Describe el estado del equipo, estética, si incluye cargador original, detalles de garantía..." 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium outline-none text-sm focus:bg-white resize-y" 
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1 font-normal">Este texto será visible para tus clientes en la tienda web al hacer clic en el equipo.</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 border-t pt-3 border-slate-100">
-                  <div>
-                    <label className="block text-slate-500 uppercase tracking-wider mb-1">Cantidad Actual en Stock</label>
-                    <input type="number" min="0" required value={form.cantidad} onChange={e => setForm({...form, cantidad: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm font-black outline-none focus:bg-white" />
-                  </div>
-                  <div>
-                    <label className="block text-slate-500 uppercase tracking-wider mb-1">Stock Mínimo (Alerta)</label>
-                    <input type="number" min="1" required value={form.stock_minimo} onChange={e => setForm({...form, stock_minimo: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm font-black outline-none focus:bg-white" />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 border-t pt-3 border-slate-100">
-                  <div>
-                    <label className="block text-slate-500 uppercase tracking-wider mb-1">Costo de Compra ($)</label>
-                    <input type="number" step="0.01" min="0" required value={form.precio_compra} onChange={e => setForm({...form, precio_compra: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-sm focus:bg-white outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-slate-500 uppercase tracking-wider mb-1">Precio de Venta al Público ($)</label>
-                    <input type="number" step="0.01" min="0" required value={form.precio_venta} onChange={e => setForm({...form, precio_venta: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono text-sm focus:bg-white outline-none text-emerald-700 font-bold" />
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
-                  <button type="button" onClick={() => setModalAbierto(false)} className="px-4 py-2 border rounded-lg text-slate-500 hover:bg-slate-50">Cancelar</button>
-                  <button type="submit" className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm">Guardar Cambios</button>
-                </div>
-              </form>
-
-            </div>
+        {!producto && (
+          <div className="mb-8 border-b-2 border-slate-100 pb-8">
+            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+              Buscar artículo por Nombre o SKU
+            </label>
+            <input 
+              type="text" autoFocus
+              placeholder="Ej. iPhone 13 o SKU M-001"
+              className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-4 font-bold text-xl outline-none"
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+            />
           </div>
         )}
 
+        {!producto && (
+          <div className="animate-fadeIn">
+            {cargandoCatalogo ? (
+              <div className="text-center text-slate-400 font-bold py-10">Cargando inventario para venta...</div>
+            ) : inventarioFiltrado.length === 0 ? (
+              <div className="text-center text-red-400 font-bold py-10">No se encontraron artículos con esa búsqueda.</div>
+            ) : (
+              categoriasOrdenadas.map(categoria => {
+                const itemsEnCategoria = inventarioFiltrado.filter(item => item.tipo?.toLowerCase() === categoria.toLowerCase());
+                if (itemsEnCategoria.length === 0) return null; 
+
+                return (
+                  <div key={categoria} className="mb-10">
+                    <h3 className="font-black text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 pb-2 mb-5">
+                      {categoria}
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                      {itemsEnCategoria.map(item => (
+                        <div 
+                          key={item.id}
+                          onClick={() => setProducto(item)}
+                          className="relative bg-slate-50 border border-slate-200 hover:border-blue-400 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group flex flex-col justify-between overflow-hidden"
+                        >
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-200 to-transparent group-hover:via-blue-500 transition-all duration-500"></div>
+                          <div>
+                            <div className="flex justify-between items-start mb-3">
+                              <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 group-hover:text-blue-500 transition-colors">
+                                SKU: {item.sku}
+                              </span>
+                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${item.cantidad > 0 ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-red-100 text-red-600 border border-red-200'}`}>
+                                {item.cantidad > 0 ? `${item.cantidad} Disp` : 'Agotado'}
+                              </span>
+                            </div>
+                            <h4 className="font-black text-slate-800 text-base leading-tight mb-1 group-hover:text-blue-700 transition-colors">
+                              {item.nombre}
+                            </h4>
+                          </div>
+                          <div className="mt-5 flex justify-between items-end border-t border-slate-200/80 pt-3">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Precio</span>
+                            <span className="font-black text-xl text-slate-800 group-hover:text-blue-600 transition-colors">
+                              ${parseFloat(item.precio_venta).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            
+            {(() => {
+              const otrosItems = inventarioFiltrado.filter(item => !categoriasOrdenadas.map(c => c.toLowerCase()).includes(item.tipo?.toLowerCase()));
+              if (otrosItems.length === 0) return null;
+              return (
+                <div className="mb-8">
+                  <h3 className="font-black text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 pb-2 mb-4">Otros Artículos</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {otrosItems.map(item => (
+                      <div key={item.id} onClick={() => setProducto(item)} className="border-2 border-slate-100 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition-all hover:shadow-md flex flex-col justify-between">
+                        <div>
+                          <span className="text-[10px] bg-slate-100 text-slate-500 font-mono px-2 py-1 rounded-md font-bold block w-fit mb-2">SKU: {item.sku}</span>
+                          <h4 className="font-black text-slate-800 text-sm leading-tight">{item.nombre}</h4>
+                        </div>
+                        <div className="mt-4 flex justify-between items-end">
+                          <span className={`text-xs font-bold ${item.cantidad > 0 ? 'text-emerald-500' : 'text-red-500'}`}>Stock: {item.cantidad}</span>
+                          <span className="font-black text-lg text-slate-800">${item.precio_venta}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ÁREA DE COBRO */}
+        {producto && (
+          <div className="space-y-6 animate-fadeIn">
+            
+            <button 
+              onClick={() => { setProducto(null); setBusqueda(''); }}
+              className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1"
+            >
+              ✖️ Cancelar y elegir otro artículo
+            </button>
+
+            {/* Ficha técnica del equipo seleccionado */}
+            <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-6 flex justify-between items-center relative overflow-hidden">
+              <div className="relative z-10">
+                <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-1">{producto.tipo} • SKU: {producto.sku}</p>
+                <h3 className="text-2xl font-black text-slate-800">{producto.nombre}</h3>
+                <div className="flex gap-3 text-[10px] font-mono text-slate-500 mt-2">
+                  {producto.color && <span className="bg-white px-2 py-1 rounded border">Color: {producto.color}</span>}
+                  {producto.imei && <span className="bg-white px-2 py-1 rounded border">IMEI: {producto.imei}</span>}
+                </div>
+              </div>
+              <div className="text-right relative z-10 flex flex-col items-end gap-2">
+                {producto.imagen_url && (
+                  <img src={producto.imagen_url} alt="Dispositivo" className="w-16 h-16 object-cover rounded-lg border-2 border-white shadow-sm" />
+                )}
+                <div>
+                  <p className="text-3xl font-black text-emerald-500">${producto.precio_venta}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* SECCIÓN DEL CLIENTE */}
+            <div className={`p-5 rounded-2xl border-2 transition-all duration-300 ${formCliente.id ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-xs font-black text-slate-600 uppercase tracking-widest">
+                  Datos del Cliente (Para Nota y Garantía)
+                </h3>
+                {formCliente.id && (
+                  <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    ✅ Cliente Frecuente Detectado
+                  </span>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Teléfono (10 dígitos)</label>
+                  <input 
+                    type="text" 
+                    maxLength={10}
+                    placeholder="Ej. 6861234567"
+                    className="w-full bg-white border border-slate-300 focus:border-blue-500 rounded-xl p-3 font-mono font-bold text-slate-700 outline-none transition-all"
+                    value={formCliente.telefono}
+                    onChange={handleTelefonoChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+                  <input 
+                    type="text" 
+                    placeholder={formCliente.id ? "Autocompletado..." : "Nombre del cliente"}
+                    className={`w-full bg-white border rounded-xl p-3 font-bold text-slate-700 outline-none transition-all ${formCliente.id ? 'border-emerald-300 text-emerald-800 bg-emerald-50/50' : 'border-slate-300 focus:border-blue-500'}`}
+                    value={formCliente.nombre}
+                    onChange={e => setFormCliente({...formCliente, nombre: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECCIÓN DE CIERRE DE VENTA */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-black text-slate-600 uppercase mb-2">¿Qué incluye el equipo? / Regalos</label>
+                <select 
+                  className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-3 font-bold text-slate-700 outline-none cursor-pointer text-sm"
+                  value={formVenta.detalles_extras}
+                  onChange={e => setFormVenta({...formVenta, detalles_extras: e.target.value})}
+                >
+                  <option value="Solo equipo (Sin accesorios)">Solo equipo (Sin accesorios)</option>
+                  <option value="Caja">Caja</option>
+                  <option value="Cargador">Cargador</option>
+                  <option value="Caja y Cargador">Caja y Cargador</option>
+                  <option value="Vidrio templado">Vidrio templado</option>
+                  <option value="Paquete Premium (Mica, Funda, Cargador)">Paquete Premium (Mica, Funda, Cargador)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-2">Método de Pago</label>
+                <select 
+                  className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-3 font-bold outline-none cursor-pointer text-sm"
+                  value={formVenta.metodo_pago}
+                  onChange={e => setFormVenta({...formVenta, metodo_pago: e.target.value})}
+                >
+                  <option value="Efectivo">💵 Efectivo</option>
+                  <option value="Transferencia">📱 Transferencia</option>
+                  <option value="Tarjeta">💳 Tarjeta (Terminal)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* ✨ NUEVO: SECCIÓN DE COMISIONES */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-black text-amber-800 uppercase tracking-widest">Asignar Comisión</h4>
+                <p className="text-[10px] text-amber-600 font-medium mt-0.5">Vendedor actual: {vendedorActivo}</p>
+              </div>
+              <div className="relative w-32">
+                <span className="absolute left-3 top-2 text-slate-500 font-bold">$</span>
+                <input 
+                  type="number"
+                  min="0"
+                  placeholder="0.00"
+                  className="w-full pl-7 pr-3 py-2 bg-white border border-amber-300 rounded-lg text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-amber-400"
+                  value={formVenta.comision_monto}
+                  onChange={e => setFormVenta({...formVenta, comision_monto: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 mt-2 border-t-2 border-slate-100">
+              <button 
+                onClick={procesarVenta}
+                disabled={loading || producto.cantidad < 1}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 text-white font-black py-5 rounded-2xl text-xl uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-emerald-500/30 flex justify-between px-8"
+              >
+                <span>{loading ? 'Procesando...' : 'Cobrar Venta'}</span>
+                <span>${(producto.precio_venta * formVenta.cantidad).toFixed(2)}</span>
+              </button>
+            </div>
+
+          </div>
+        )}
       </div>
     </div>
   );
