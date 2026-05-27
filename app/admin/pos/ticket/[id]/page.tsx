@@ -36,7 +36,6 @@ export default function NotaDeVenta() {
   }, [id]); 
 
   useEffect(() => {
-    // ✨ CAMBIO: Ahora espera a que carguen los 3 QRs
     if (venta && qrsCargados >= 3) {
       setTimeout(() => {
         window.print();
@@ -90,6 +89,12 @@ export default function NotaDeVenta() {
         <div className="flex justify-between items-center text-sm font-bold font-mono">
           <p className="text-lg">FOLIO: <span className="text-emerald-600">#V-{folioVenta}</span></p>
           <p className="text-lg">{new Date(venta.created_at).toLocaleDateString()} {new Date(venta.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+        </div>
+
+        {/* ✨ NUEVO: DATOS DEL CLIENTE EN LA NOTA */}
+        <div className="border border-black p-4 text-sm grid grid-cols-2 gap-4 my-3 bg-gray-50/50">
+          <p><strong>CLIENTE:</strong> {venta.clientes?.nombre ? venta.clientes.nombre.toUpperCase() : 'PÚBLICO EN GENERAL'}</p>
+          <p><strong>TELÉFONO:</strong> {venta.clientes?.telefono || 'N/A'}</p>
         </div>
 
         {/* DETALLE DEL PRODUCTO VENDIDO */}
@@ -147,7 +152,6 @@ export default function NotaDeVenta() {
 
         {/* --- SECCIÓN DE CÓDIGOS QR Y FIRMAS --- */}
         <div className="mt-auto pt-6 border-t-2 border-dashed border-gray-300">
-            {/* ✨ CAMBIO: Grid a 3 columnas */}
             <div className="grid grid-cols-3 gap-2">
               <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
                 <p className="font-black text-[10px] tracking-wide mb-1">¡VALORAMOS TU OPINIÓN!</p>
@@ -155,10 +159,10 @@ export default function NotaDeVenta() {
                 <p className="text-[9px] text-gray-500 mt-1">Escanea la encuesta</p>
               </div>
 
-              {/* ✨ NUEVO: VIP QR */}
               <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
                 <p className="font-black text-[10px] tracking-wide mb-1">Canal Exclusivo WhatsApp - OFERTAS VIP</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://whatsapp.com/channel/0029VbCp9NLFMqrVPF1ZLA0W" className="w-16 h-16" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+                {/* Recuerda cambiar el enlace abajo por tu link real del canal */}
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://chat.whatsapp.com/your-link-here" className="w-16 h-16" onLoad={() => setQrsCargados(prev => prev + 1)}/>
                 <p className="text-[9px] text-gray-500 mt-1">Únete a nuestro Canal</p>
               </div>
 

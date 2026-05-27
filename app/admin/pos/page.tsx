@@ -1,3 +1,4 @@
+//Punto de venta 
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +13,9 @@ export default function PuntoDeVenta() {
   const [loading, setLoading] = useState(false);
   const [cargandoCatalogo, setCargandoCatalogo] = useState(true);
   
+  // ✨ NUEVO: Base de datos de clientes para el autocompletado
+  const [clientesBd, setClientesBd] = useState<any[]>([]);
+
   // Datos de la Venta
   const [formVenta, setFormVenta] = useState({
     metodo_pago: 'Efectivo',
@@ -19,22 +23,52 @@ export default function PuntoDeVenta() {
     cantidad: 1
   });
 
-  // 1. Cargar todo el inventario al abrir el Punto de Venta
+  // ✨ NUEVO: Datos del cliente inteligente
+  const [formCliente, setFormCliente] = useState({
+    telefono: '',
+    nombre: '',
+    id: null as string | null
+  });
+
   useEffect(() => {
-    const cargarInventario = async () => {
+    // Cargar Inventario y Clientes al mismo tiempo
+    const cargarDatos = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`);
-        const data = await res.json();
-       // ✨ SOLUCIÓN 1: Le decimos que los datos vienen dentro de "productos"
-        const listaProductos = data.productos || (Array.isArray(data) ? data : []);
-        setInventario(listaProductos);
+        const [resInv, resCli] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/crm`) // Asegúrate de que esta ruta traiga tus clientes
+        ]);
+
+        if (resInv.ok) {
+          const dataInv = await resInv.json();
+          setInventario(dataInv.productos || (Array.isArray(dataInv) ? dataInv : []));
+        }
+
+        if (resCli.ok) {
+          const dataCli = await resCli.json();
+          setClientesBd(dataCli.clientes || []);
+        }
       } catch (err) {
-        console.error("Error al cargar el inventario visual", err);
+        console.error("Error al cargar datos", err);
       }
       setCargandoCatalogo(false);
     };
-    cargarInventario();
+    cargarDatos();
   }, []);
+
+  // ✨ NUEVO: Lógica del autocompletado
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const tel = e.target.value.replace(/\D/g, ''); // Limpiar para que sean solo números
+    
+    // Buscar si el cliente ya existe
+    const clienteExistente = clientesBd.find(c => String(c.telefono).includes(tel) && tel.length >= 10);
+
+    if (clienteExistente) {
+      setFormCliente({ telefono: tel, nombre: clienteExistente.nombre, id: clienteExistente.id });
+    } else {
+      setFormCliente(prev => ({ ...prev, telefono: tel, id: null }));
+    }
+  };
 
   const procesarVenta = async () => {
     if (!producto) return;
@@ -49,14 +83,17 @@ export default function PuntoDeVenta() {
           cantidad: formVenta.cantidad,
           precio_unitario: producto.precio_venta,
           metodo_pago: formVenta.metodo_pago,
-          detalles_regalo_accesorios: formVenta.detalles_extras
+          detalles_regalo_accesorios: formVenta.detalles_extras,
+          // ✨ NUEVO: Mandamos la info del cliente al backend
+          cliente_id: formCliente.id,
+          cliente_nombre: formCliente.nombre || 'Público en General',
+          cliente_telefono: formCliente.telefono
         })
       });
 
       const data = await res.json();
       
       if (res.ok && data.success) {
-        // Redirigimos directo a imprimir la nota de venta
         router.push(`/admin/pos/ticket/${data.venta_id}`);
       } else {
         alert(`Error al guardar: ${data.error}`);
@@ -68,20 +105,16 @@ export default function PuntoDeVenta() {
     setLoading(false);
   };
 
-  // 2. Lógica para filtrar y agrupar el catálogo en tiempo real
   const inventarioFiltrado = inventario.filter(item => 
     item.nombre?.toLowerCase().includes(busqueda.toLowerCase()) || 
     item.sku?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  // Orden exacto solicitado
-  // ✨ SOLUCIÓN 2: Agregamos cómo se llaman realmente en tu BD para que no los oculte
   const categoriasOrdenadas = ['Celulares', 'Tablets', 'Smartwatch', 'Audífonos', 'Laptops', 'DISPOSITIVO', 'REFACCION'];
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center py-12 px-6">
       
-      {/* HEADER POS */}
       <div className="max-w-4xl w-full mb-6 flex justify-between items-center">
         <button onClick={() => router.push('/admin')} className="text-slate-400 hover:text-white font-bold transition">
           ⬅️ Volver al panel
@@ -97,7 +130,6 @@ export default function PuntoDeVenta() {
 
       <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
         
-        {/* BUSCADOR INTELIGENTE (Filtra la lista de abajo o acepta pistola de código de barras) */}
         {!producto && (
           <div className="mb-8 border-b-2 border-slate-100 pb-8">
             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
@@ -113,9 +145,6 @@ export default function PuntoDeVenta() {
           </div>
         )}
 
-        {/* =========================================================================
-            VISTA 1: CATÁLOGO VISUAL AGRUPADO (Aparece si no hay producto seleccionado)
-            ========================================================================= */}
         {!producto && (
           <div className="animate-fadeIn">
             {cargandoCatalogo ? (
@@ -123,18 +152,15 @@ export default function PuntoDeVenta() {
             ) : inventarioFiltrado.length === 0 ? (
               <div className="text-center text-red-400 font-bold py-10">No se encontraron artículos con esa búsqueda.</div>
             ) : (
-              // Agrupamos dinámicamente según el orden solicitado
               categoriasOrdenadas.map(categoria => {
                 const itemsEnCategoria = inventarioFiltrado.filter(item => item.tipo?.toLowerCase() === categoria.toLowerCase());
-                
-                if (itemsEnCategoria.length === 0) return null; // Si no hay equipos en esta categoría, no la dibuja
+                if (itemsEnCategoria.length === 0) return null; 
 
                 return (
                   <div key={categoria} className="mb-10">
                     <h3 className="font-black text-slate-400 uppercase tracking-widest border-b-2 border-slate-100 pb-2 mb-5">
                       {categoria}
                     </h3>
-                    
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                       {itemsEnCategoria.map(item => (
                         <div 
@@ -142,11 +168,8 @@ export default function PuntoDeVenta() {
                           onClick={() => setProducto(item)}
                           className="relative bg-slate-50 border border-slate-200 hover:border-blue-400 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group flex flex-col justify-between overflow-hidden"
                         >
-                          {/* Línea de acento superior sutil que se ilumina al pasar el mouse */}
                           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-200 to-transparent group-hover:via-blue-500 transition-all duration-500"></div>
-
                           <div>
-                            {/* Encabezado de la tarjeta: SKU y Etiqueta de Stock */}
                             <div className="flex justify-between items-start mb-3">
                               <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 group-hover:text-blue-500 transition-colors">
                                 SKU: {item.sku}
@@ -155,18 +178,12 @@ export default function PuntoDeVenta() {
                                 {item.cantidad > 0 ? `${item.cantidad} Disponibles` : 'Agotado'}
                               </span>
                             </div>
-                            
-                            {/* Nombre del Producto */}
                             <h4 className="font-black text-slate-800 text-base leading-tight mb-1 group-hover:text-blue-700 transition-colors">
                               {item.nombre}
                             </h4>
                           </div>
-
-                          {/* Pie de la tarjeta: Separador y Precio */}
                           <div className="mt-5 flex justify-between items-end border-t border-slate-200/80 pt-3">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                              Precio de Venta
-                            </span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Precio de Venta</span>
                             <span className="font-black text-xl text-slate-800 group-hover:text-blue-600 transition-colors">
                               ${parseFloat(item.precio_venta).toFixed(2)}
                             </span>
@@ -178,7 +195,7 @@ export default function PuntoDeVenta() {
                 );
               })
             )}
-            {/* Agregamos una categoría "Otros" por si tienes artículos que no caben en las 5 principales */}
+            
             {(() => {
               const otrosItems = inventarioFiltrado.filter(item => !categoriasOrdenadas.map(c => c.toLowerCase()).includes(item.tipo?.toLowerCase()));
               if (otrosItems.length === 0) return null;
@@ -206,12 +223,11 @@ export default function PuntoDeVenta() {
         )}
 
         {/* =========================================================================
-            VISTA 2: ÁREA DE COBRO (Aparece cuando se selecciona un producto)
+            VISTA 2: ÁREA DE COBRO
             ========================================================================= */}
         {producto && (
           <div className="space-y-6 animate-fadeIn">
             
-            {/* Botón para cancelar selección y volver al catálogo */}
             <button 
               onClick={() => { setProducto(null); setBusqueda(''); }}
               className="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1"
@@ -219,7 +235,6 @@ export default function PuntoDeVenta() {
               ✖️ Cancelar y elegir otro artículo
             </button>
 
-            {/* Tarjeta del Producto Seleccionado */}
             <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-6 flex justify-between items-center">
               <div>
                 <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-1">{producto.tipo} • SKU: {producto.sku}</p>
@@ -234,7 +249,47 @@ export default function PuntoDeVenta() {
               </div>
             </div>
 
-            {/* Opciones Extra y Notas */}
+            {/* ✨ NUEVO: SECCIÓN DEL CLIENTE (Buscador Inteligente) */}
+            <div className={`p-5 rounded-2xl border-2 transition-all duration-300 ${formCliente.id ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-xs font-black text-slate-600 uppercase tracking-widest">
+                  Datos del Cliente (Para Nota y Garantía)
+                </h3>
+                {formCliente.id && (
+                  <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    ✅ Cliente Frecuente Detectado
+                  </span>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Teléfono (10 dígitos)</label>
+                  <input 
+                    type="text" 
+                    maxLength={10}
+                    placeholder="Ej. 6861234567"
+                    className="w-full bg-white border border-slate-300 focus:border-blue-500 rounded-xl p-3 font-mono font-bold text-slate-700 outline-none transition-all"
+                    value={formCliente.telefono}
+                    onChange={handleTelefonoChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+                  <input 
+                    type="text" 
+                    placeholder={formCliente.id ? "Autocompletado..." : "Nombre del cliente"}
+                    className={`w-full bg-white border rounded-xl p-3 font-bold text-slate-700 outline-none transition-all ${formCliente.id ? 'border-emerald-300 text-emerald-800 bg-emerald-50/50' : 'border-slate-300 focus:border-blue-500'}`}
+                    value={formCliente.nombre}
+                    onChange={e => setFormCliente({...formCliente, nombre: e.target.value})}
+                  />
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-2">
+                * Si es un cliente nuevo, se registrará automáticamente en tu CRM al finalizar la venta.
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-black text-slate-600 uppercase mb-2">¿Qué incluye el equipo? / Regalos</label>
@@ -275,7 +330,6 @@ export default function PuntoDeVenta() {
               </div>
             </div>
 
-            {/* BOTÓN DE COBRO */}
             <div className="pt-4 mt-2 border-t-2 border-slate-100">
               <button 
                 onClick={procesarVenta}
