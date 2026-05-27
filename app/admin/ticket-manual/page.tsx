@@ -26,7 +26,12 @@ export default function TicketManual() {
     descripcion: '',
     precio_unitario: '0',
     metodo_pago: 'Efectivo',
-    extras: 'Ninguno'
+    extras: 'Ninguno',
+
+    // ✨ Campos Técnicos para Dispositivos
+    color: '',
+    imei: '',
+    numero_serie: ''
   });
 
   const handleChange = (e: any) => {
@@ -138,7 +143,26 @@ export default function TicketManual() {
                     <textarea name="descripcion" value={form.descripcion} onChange={handleChange} rows={2} className="w-full border border-blue-200 rounded p-2 text-sm"></textarea>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+
+                {/* ✨ NUEVO: Campos técnicos específicos para venta de Celulares/Equipos */}
+                {tipoTicket === 'VENTA_DISPOSITIVO' && (
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-blue-100 mt-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-blue-800 uppercase mb-1">Color</label>
+                      <input type="text" name="color" value={form.color} onChange={handleChange} placeholder="Ej. Azul" className="w-full border border-blue-200 rounded p-2 text-xs" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-bold text-blue-800 uppercase mb-1">IMEI (15 dígitos)</label>
+                      <input type="text" name="imei" value={form.imei} onChange={handleChange} placeholder="Opcional" className="w-full border border-blue-200 rounded p-2 text-xs font-mono" />
+                    </div>
+                    <div className="col-span-3">
+                      <label className="block text-[10px] font-bold text-blue-800 uppercase mb-1">Número de Serie</label>
+                      <input type="text" name="numero_serie" value={form.numero_serie} onChange={handleChange} placeholder="Opcional" className="w-full border border-blue-200 rounded p-2 text-xs font-mono" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 mt-3">
                   <div>
                     <label className="block text-[10px] font-bold text-blue-800 uppercase mb-1">Precio Unitario ($)</label>
                     <input type="number" name="precio_unitario" value={form.precio_unitario} onChange={handleChange} className="w-full border border-blue-200 rounded p-2 text-sm font-bold text-emerald-600" />
@@ -162,7 +186,7 @@ export default function TicketManual() {
 
           <button 
             onClick={handlePrint}
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-4 rounded-xl text-lg tracking-widest shadow-lg flex justify-center items-center gap-2"
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-4 rounded-xl text-lg tracking-widest shadow-lg flex justify-center items-center gap-2 transition-transform active:scale-95"
           >
             🖨️ IMPRIMIR TICKET
           </button>
@@ -243,7 +267,18 @@ export default function TicketManual() {
                   <tbody>
                     <tr className="font-bold text-lg">
                       <td className="pt-4 align-top">{form.cantidad}x</td>
-                      <td className="pt-4 leading-tight whitespace-pre-wrap">{form.descripcion.toUpperCase() || 'ARTÍCULO VARIO'}</td>
+                      <td className="pt-4 leading-tight whitespace-pre-wrap">
+                        {form.descripcion.toUpperCase() || 'ARTÍCULO VARIO'}
+                        
+                        {/* ✨ NUEVO: Pinta los datos técnicos en el recibo si es venta de dispositivo */}
+                        {tipoTicket === 'VENTA_DISPOSITIVO' && (
+                          <div className="mt-1 space-y-0.5 text-[11px] text-gray-600 font-normal font-sans leading-tight">
+                            {form.color && <p>Color: <span className="font-bold uppercase text-gray-800">{form.color}</span></p>}
+                            {form.imei && <p>IMEI: <span className="font-bold text-gray-800">{form.imei}</span></p>}
+                            {form.numero_serie && <p>Serie: <span className="font-bold text-gray-800">{form.numero_serie}</span></p>}
+                          </div>
+                        )}
+                      </td>
                       <td className="pt-4 text-right align-top">${costoTotalVenta}</td>
                     </tr>
                   </tbody>
