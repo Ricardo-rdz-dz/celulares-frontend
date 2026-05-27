@@ -235,6 +235,12 @@ return (
             >
               Módulo Finanzas
             </button>
+            <button
+              onClick={() => router.push('/admin/ticket-manual')}
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm gap-2"
+            >
+              📝 Ticket Libre
+            </button>
 
           </div>
         </div>
