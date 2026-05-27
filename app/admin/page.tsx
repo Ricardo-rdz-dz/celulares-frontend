@@ -1,3 +1,4 @@
+//Codigo de panel principal administrativo, donde se muestran los tickets registrados, con buscador y filtros por estado
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,11 +12,14 @@ export default function AdminDashboard() {
   // Estados para el buscador y filtros
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
-  // ✨ NUEVO ESTADO: Filtro de Tiempo (Por defecto mostramos el último mes)
   const [filtroTiempo, setFiltroTiempo] = useState('MES'); 
   const [usuarioActivo, setUsuarioActivo] = useState<any>(null);
 
-useEffect(() => {
+  // ✨ NUEVO ESTADO: Estadísticas del CRM (Radar de Ventas)
+  const [crmStats, setCrmStats] = useState({ verdes: 0, amarillos: 0, rojos: 0, totalOportunidades: 0 });
+
+  useEffect(() => {
+    // 1. Cargar Tickets
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/tickets`, { cache: 'no-store' })
       .then(async (res) => {
         if (!res.ok) {
@@ -27,41 +31,52 @@ useEffect(() => {
       })
       .then((data) => {
         const listaTickets = data.tickets || [];
-        
-        // ORDENAR: Del más nuevo al más viejo para ver primero lo reciente
         const ticketsOrdenados = listaTickets.sort((a: any, b: any) => {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
-
         setTickets(ticketsOrdenados);
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Fallo en la lectura:', err);
+        console.error('Fallo en la lectura de tickets:', err);
         setLoading(false);
       });
+
+    // ✨ 2. Cargar datos del CRM para el Radar
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/crm`, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        const clientes = data.clientes || [];
+        let verdes = 0, amarillos = 0, rojos = 0;
+        const hoy = new Date();
+
+        clientes.forEach((cliente: any) => {
+          if (cliente.historial && cliente.historial.length > 0) {
+            const ultimoTicket = new Date(cliente.historial[0].created_at);
+            const diasPasados = Math.ceil(Math.abs(hoy.getTime() - ultimoTicket.getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (diasPasados > 30 && diasPasados <= 60) verdes++;
+            else if (diasPasados > 60 && diasPasados <= 90) amarillos++;
+            else if (diasPasados > 90) rojos++;
+          }
+        });
+
+        setCrmStats({ verdes, amarillos, rojos, totalOportunidades: verdes + amarillos + rojos });
+      })
+      .catch(err => console.error('Fallo en la lectura del CRM:', err));
   }, []);
 
-  // 2. BLOQUE DE SESIÓN CORREGIDO (Seguro contra fallos)
   useEffect(() => {
-    // Leemos la llave correcta que utiliza tu Login para guardar el usuario
     const sesionGuardada = localStorage.getItem('movilplace_user');
-    
     if (sesionGuardada) {
       try {
-        // Intentamos leerlo como un objeto estructurado
         const usuario = JSON.parse(sesionGuardada);
-        
         setUsuarioActivo({
           nombre: usuario.nombre || usuario.name || 'Usuario',
           rol: usuario.rol || usuario.role || 'Admin'
         });
       } catch (error) {
-        // Si no es un JSON válido (por ejemplo, si es texto plano), lo rescatamos aquí
-        setUsuarioActivo({
-          nombre: sesionGuardada,
-          rol: 'Admin'
-        });
+        setUsuarioActivo({ nombre: sesionGuardada, rol: 'Admin' });
       }
     }
   }, []);
@@ -83,24 +98,18 @@ useEffect(() => {
     }
   };
 
-  // ✨ LÓGICA DE FILTRADO COMBINADO
   const ticketsFiltrados = tickets.filter((ticket: any) => {
-    // 1. Validar el Chip de Estado
     const pasaFiltroEstado = filtroEstado === 'TODOS' || ticket.estado === filtroEstado;
-    
-    // 2. Validar el texto de búsqueda (Usando String para evitar el error toLowerCase)
     const termino = busqueda.toLowerCase();
     const folio = String(ticket.folio || ticket.id).toLowerCase();
     const cliente = (ticket.clientes?.nombre || '').toLowerCase();
     const equipo = `${ticket.equipos?.marca || ''} ${ticket.equipos?.modelo || ''}`.toLowerCase();
     const pasaBusqueda = folio.includes(termino) || cliente.includes(termino) || equipo.includes(termino);
 
-    // 3. ✨ Validar el Filtro de Tiempo
     let pasaFiltroTiempo = true;
     if (filtroTiempo !== 'TODOS') {
       const fechaTicket = new Date(ticket.created_at);
       const hoy = new Date();
-      
       if (filtroTiempo === 'HOY') {
         pasaFiltroTiempo = fechaTicket.toDateString() === hoy.toDateString();
       } else if (filtroTiempo === 'SEMANA') {
@@ -157,9 +166,7 @@ return (
           {/* BOTONES EN GRID */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full xl:w-auto">
             
-            {/* ========================================== */}
             {/* 🔥 BOTONES PRINCIPALES (Alta Relevancia) 🔥 */}
-            {/* ========================================== */}
             <button
               onClick={() => router.push('/admin/pos')}
               className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-black transition-all border bg-emerald-600 border-emerald-500 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5"
@@ -188,9 +195,7 @@ return (
               Alta Refacciones
             </button>
 
-            {/* ========================================== */}
             {/* ⚙️ BOTONES SECUNDARIOS (Formato Sutil) ⚙️  */}
-            {/* ========================================== */}
             <button
               onClick={() => router.push('/admin/inventario')}
               className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm"
@@ -207,9 +212,14 @@ return (
 
             <button
               onClick={() => router.push('/admin/clientes')}
-              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm"
+              className="flex justify-center items-center px-4 py-3 rounded-xl text-sm font-semibold transition-all border bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-700/80 hover:text-white shadow-sm relative"
             >
               CRM Clientes
+              {crmStats.totalOportunidades > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md animate-pulse">
+                  {crmStats.totalOportunidades}
+                </span>
+              )}
             </button>
 
             <button
@@ -231,15 +241,53 @@ return (
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10">
-        {/* 2. COLOCAR EL WIDGET AQUÍ (Arriba de todo) */}
+        
+        {/* ✨ WIDGET RADAR DE VENTAS (Aparece solo si hay oportunidades) */}
+        {crmStats.totalOportunidades > 0 && (
+          <div className="mb-8 bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-fadeIn">
+            <div className="flex items-center gap-5">
+              <div className="bg-white/10 p-4 rounded-full text-3xl">🎯</div>
+              <div>
+                <h3 className="text-white font-black text-lg tracking-tight">Oportunidades de Venta Detectadas</h3>
+                <p className="text-slate-300 text-sm mt-1">Tienes <span className="text-white font-bold">{crmStats.totalOportunidades} clientes</span> que no han visitado MovilPlace en más de 30 días. ¡Reactiválos!</p>
+                
+                <div className="flex gap-4 mt-3">
+                  {crmStats.verdes > 0 && (
+                    <span className="text-[11px] font-bold bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30">
+                      {crmStats.verdes} para Seguimiento
+                    </span>
+                  )}
+                  {crmStats.amarillos > 0 && (
+                    <span className="text-[11px] font-bold bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
+                      {crmStats.amarillos} Dormidos
+                    </span>
+                  )}
+                  {crmStats.rojos > 0 && (
+                    <span className="text-[11px] font-bold bg-red-500/20 text-red-300 px-3 py-1 rounded-full border border-red-500/30">
+                      {crmStats.rojos} en Riesgo
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => router.push('/admin/clientes')}
+              className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-3.5 rounded-xl shadow-lg shadow-blue-900/50 transition-all active:scale-95 text-sm uppercase tracking-wider"
+            >
+              Abrir CRM y Enviar Promos
+            </button>
+          </div>
+        )}
+
         <div className="mb-10">
           <PuntoEquilibrioWidget />
         </div>
+
         {/* BARRA DE BÚSQUEDA Y FILTROS */}
         <div className="mb-6 flex flex-col lg:flex-row gap-4 justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
           
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-            {/* Buscador de Texto */}
             <div className="relative w-full sm:w-64">
               <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
               <input 
@@ -251,8 +299,6 @@ return (
               />
             </div>
         
-
-            {/* ✨ Filtro de Tiempo Desplegable */}
             <div className="w-full sm:w-auto">
               <select 
                 value={filtroTiempo}
@@ -267,7 +313,6 @@ return (
             </div>
           </div>
 
-          {/* Chips de Estados */}
           <div className="flex flex-wrap gap-2 w-full lg:w-auto justify-start lg:justify-end">
             {['TODOS', 'RECIBIDO', 'DIAGNOSTICO', 'ESPERANDO_PIEZA', 'ENTREGADO'].map((estado) => (
               <button
