@@ -26,8 +26,8 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
   }, [ticketId]);
 
   useEffect(() => {
-    // Esperamos a que los 2 QRs terminen de cargar para lanzar la impresión
-    if (ticket && qrsCargados >= 2) {
+    // ✨ CAMBIO: Ahora espera a que carguen los 3 QRs
+    if (ticket && qrsCargados >= 3) {
       setTimeout(() => {
         window.print();
       }, 300); 
@@ -107,7 +107,7 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
           <p>• Es indispensable presentar este recibo original para hacer válida cualquier reclamación.</p>
         </div>
 
-        {/* FIRMAS Y QRS CENTRADOS (mt-auto empuja esto al fondo de la hoja) */}
+        {/* FIRMAS Y QRS CENTRADOS */}
         <div className="flex flex-col justify-end mt-auto gap-8 pt-4">
           
           {/* SECCIÓN DE FIRMAS */}
@@ -122,36 +122,40 @@ export default function PrintTicketFinal({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          {/* SECCIÓN DE QRS (Banner destacado) */}
-          <div className="bg-gray-50 border-2 border-dashed border-gray-400 p-4 rounded-2xl flex items-center justify-center gap-8 mx-4">
+          {/* ✨ SECCIÓN DE QRS (Ahora en 3 columnas) */}
+          <div className="bg-gray-50 border-2 border-dashed border-gray-400 p-3 rounded-2xl grid grid-cols-3 gap-2 mx-4">
             
-            {/* Encuesta QR */}
-            <div className="flex flex-col items-center text-center">
-              <p className="text-[10px] font-black uppercase mb-1.5 text-gray-800">¿Cómo nos fue?</p>
+            {/* 1. Encuesta QR */}
+            <div className="flex flex-col items-center text-center justify-center">
+              <p className="text-[10px] font-black uppercase mb-1 text-gray-800">¿Cómo nos fue?</p>
               <img 
                 src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://forms.gle/TdJQcXYvyqJias5p6" 
-                className="w-24 h-24 p-1 bg-white border border-gray-300 shadow-sm" 
+                className="w-20 h-20 p-1 bg-white border border-gray-300 shadow-sm" 
                 onLoad={() => setQrsCargados(prev => prev + 1)}
               />
-              <p className="text-[8px] font-bold mt-1.5 text-gray-500 uppercase tracking-widest">Encuesta Rápida</p>
+              <p className="text-[8px] font-bold mt-1 text-gray-500 uppercase tracking-widest">Encuesta Rápida</p>
             </div>
 
-            {/* Mensaje Central CTA */}
-            <div className="text-center max-w-[200px]">
-              <span className="text-3xl block mb-2">⭐</span>
-              <p className="text-[12px] font-black text-gray-800 leading-tight mb-1">¡Ayúdanos a seguir mejorando!</p>
-              <p className="text-[10px] text-gray-600 font-medium leading-snug">Escanea con la cámara de tu celular y cuéntanos tu experiencia.</p>
+            {/* ✨ 2. NUEVO: VIP QR */}
+            <div className="flex flex-col items-center text-center justify-center">
+              <p className="text-[10px] font-black uppercase mb-1 text-gray-800">Canal Exclusivo WhatsApp - OFERTAS VIP</p>
+              <img 
+                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://whatsapp.com/channel/0029VbCp9NLFMqrVPF1ZLA0W" 
+                className="w-20 h-20 p-1 bg-white border border-gray-300 shadow-sm" 
+                onLoad={() => setQrsCargados(prev => prev + 1)}
+              />
+              <p className="text-[8px] font-bold mt-1 text-gray-500 uppercase tracking-widest">Únete al Canal</p>
             </div>
 
-            {/* Google QR (Ajustado con API válida para evitar bloqueos) */}
-            <div className="flex flex-col items-center text-center">
-              <p className="text-[10px] font-black uppercase mb-1.5 text-gray-800">Califícanos</p>
+            {/* 3. Google QR */}
+            <div className="flex flex-col items-center text-center justify-center">
+              <p className="text-[10px] font-black uppercase mb-1 text-gray-800">Califícanos</p>
               <img 
                 src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://maps.google.com" 
-                className="w-24 h-24 p-1 bg-white border border-gray-300 shadow-sm" 
+                className="w-20 h-20 p-1 bg-white border border-gray-300 shadow-sm" 
                 onLoad={() => setQrsCargados(prev => prev + 1)}
               />
-              <p className="text-[8px] font-bold mt-1.5 text-gray-500 uppercase tracking-widest">Reseña en Google</p>
+              <p className="text-[8px] font-bold mt-1 text-gray-500 uppercase tracking-widest">Reseña en Google</p>
             </div>
 
           </div>

@@ -36,7 +36,8 @@ export default function NotaDeVenta() {
   }, [id]); 
 
   useEffect(() => {
-    if (venta && qrsCargados >= 2) {
+    // ✨ CAMBIO: Ahora espera a que carguen los 3 QRs
+    if (venta && qrsCargados >= 3) {
       setTimeout(() => {
         window.print();
       }, 300); 
@@ -144,17 +145,26 @@ export default function NotaDeVenta() {
           <p>• En caso de requerir garantía, el cliente debe primero comunicarse con nosotros para después acudir a nuestras instalaciones para que un técnico revise el equipo y determine si aplica la garantía o no.</p>
         </div>
 
-        {/* --- SECCIÓN DE CÓDIGOS QR Y FIRMAS (mt-auto los mantiene abajo) --- */}
+        {/* --- SECCIÓN DE CÓDIGOS QR Y FIRMAS --- */}
         <div className="mt-auto pt-6 border-t-2 border-dashed border-gray-300">
-            <div className="grid grid-cols-2 gap-4">
+            {/* ✨ CAMBIO: Grid a 3 columnas */}
+            <div className="grid grid-cols-3 gap-2">
               <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
                 <p className="font-black text-[10px] tracking-wide mb-1">¡VALORAMOS TU OPINIÓN!</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-16 h-16" onLoad={() => setQrsCargados(prev => prev + 1)}/>
                 <p className="text-[9px] text-gray-500 mt-1">Escanea la encuesta</p>
               </div>
+
+              {/* ✨ NUEVO: VIP QR */}
+              <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
+                <p className="font-black text-[10px] tracking-wide mb-1">Canal Exclusivo WhatsApp - OFERTAS VIP</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://whatsapp.com/channel/0029VbCp9NLFMqrVPF1ZLA0W" className="w-16 h-16" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+                <p className="text-[9px] text-gray-500 mt-1">Únete a nuestro Canal</p>
+              </div>
+
               <div className="p-2 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
                 <p className="font-black text-[10px] tracking-wide mb-1">⭐⭐⭐⭐⭐ RESEÑA</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-20 h-20" onLoad={() => setQrsCargados(prev => prev + 1)}/>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-16 h-16" onLoad={() => setQrsCargados(prev => prev + 1)}/>
                 <p className="text-[9px] text-gray-500 mt-1">Déjanos 5 estrellas en Google</p>
               </div>
             </div>
