@@ -8,9 +8,12 @@ export default function CRMClientes() {
   const [loading, setLoading] = useState(true);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<any>(null);
 
-  // ✨ NUEVOS ESTADOS PARA EL REDACTOR
+  // ESTADOS PARA EL REDACTOR
   const [mensajePersonalizado, setMensajePersonalizado] = useState('');
   const [mejorandoConIA, setMejorandoConIA] = useState(false);
+
+  // ✨ NUEVO ESTADO: Sugerencia Inteligente
+  const [sugerenciaIA, setSugerenciaIA] = useState<{texto: string, accion: string, icono: string} | null>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/crm`, { cache: 'no-store' })
@@ -23,12 +26,11 @@ export default function CRMClientes() {
   }, []);
 
   // Función constructora de mensajes rápidos
-  // ✨ NUEVA FUNCIÓN: Carga la plantilla en el cuadro de texto en lugar de enviarla directo
   const cargarPlantilla = (tipoPromo: string) => {
     if (!clienteSeleccionado) return;
     
     let mensaje = '';
-    const primerEquipo = clienteSeleccionado.historial[0]?.equipos?.marca || 'dispositivo';
+    const primerEquipo = clienteSeleccionado.historial?.[0]?.equipos?.marca || 'dispositivo';
 
     switch (tipoPromo) {
       case 'SMARTWATCH':
@@ -44,16 +46,13 @@ export default function CRMClientes() {
         mensaje = `¡Hola ${clienteSeleccionado.nombre}! 👋 Te saludamos de MovilPlace...`;
     }
 
-    // Le sumamos la leyenda anti-spam y lo mandamos al cuadro de texto
-    const leyendaAntiSpam = `\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
+    const leyendaAntiSpam = `\n\n_(Si prefieres no recibir estas promociones, responde "NO")_`;
     setMensajePersonalizado(mensaje + leyendaAntiSpam);
     
-    // Pequeño scroll automático hacia el cuadro de texto para mejor UX (opcional pero se ve muy pro)
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
 
-  // ✨ FUNCIÓN PARA CONECTAR AL MOTOR DE IA EN TU BACKEND
- const mejorarMensajeIA = async () => {
+  const mejorarMensajeIA = async () => {
     setMejorandoConIA(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/mejorar`, {
@@ -66,10 +65,7 @@ export default function CRMClientes() {
       });
       if (res.ok) {
         const data = await res.json();
-        
-        // 🎯 Interceptamos el mensaje de la IA y le sumamos la leyenda
-        const mensajeFinal = `${data.mensajeMejorado}\n\n_(Si prefieres no recibir estas promociones, simplemente responde "NO")_`;
-        
+        const mensajeFinal = `${data.mensajeMejorado}\n\n_(Si prefieres no recibir estas promociones, responde "NO")_`;
         setMensajePersonalizado(mensajeFinal);
       } else {
         alert('❌ Hubo un error de conexión con el servidor.');
@@ -80,7 +76,6 @@ export default function CRMClientes() {
     setMejorandoConIA(false);
   };
 
-  // ✨ FUNCIÓN PARA ENVIAR EL TEXTO PERSONALIZADO
   const enviarMensajeLibre = () => {
     if (!clienteSeleccionado || !mensajePersonalizado) return;
     let telefonoLimpio = String(clienteSeleccionado.telefono).replace(/\D/g, '');
@@ -89,145 +84,213 @@ export default function CRMClientes() {
     window.open(url, '_blank');
   };
 
-  // Cada que cambies de cliente, limpiamos el cuadro de texto
+  // ✨ MOTOR DE SUGERENCIAS: Se ejecuta cada que seleccionas a un cliente
   useEffect(() => {
     setMensajePersonalizado('');
+    
+    if (clienteSeleccionado) {
+      const tickets = clienteSeleccionado.historial?.length || 0;
+      const ultimoEquipo = clienteSeleccionado.historial?.[0]?.equipos?.marca || 'equipo';
+      
+      const opciones = [
+        { 
+          icono: '🎟️',
+          texto: `Este cliente tiene ${tickets} visitas. Fidelízalo enviándole el Cupón del 15% de descuento.`, 
+          accion: 'DESCUENTO_REPARACION' 
+        },
+        { 
+          icono: '⌚️',
+          texto: `Su último servicio fue para un ${ultimoEquipo}. Ofrécele un Smartwatch que haga ecosistema con su marca.`, 
+          accion: 'SMARTWATCH' 
+        },
+        { 
+          icono: '📱',
+          texto: `Haz retargeting. Envíale el Nuevo Inventario para ver si le interesa renovar su ${ultimoEquipo}.`, 
+          accion: 'NUEVO_INVENTARIO' 
+        }
+      ];
+
+      // Elegimos una sugerencia seudo-aleatoria basada en el ID del cliente para que no cambie si das clics rápidos
+      const randomIndex = clienteSeleccionado.nombre.length % opciones.length;
+      setSugerenciaIA(opciones[randomIndex]);
+
+    } else {
+      setSugerenciaIA(null);
+    }
   }, [clienteSeleccionado]);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col md:flex-row font-sans text-slate-800">
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800">
       
-      {/* PANEL IZQUIERDO: LISTA DE CLIENTES */}
-      <div className="w-full md:w-1/3 bg-white border-r border-slate-200 h-screen overflow-y-auto flex flex-col">
-        <div className="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 flex justify-between items-center z-10">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Directorio de Clientes</h2>
+      {/* PANEL IZQUIERDO: LISTA DE CLIENTES OPTIMIZADA */}
+      <div className="w-full md:w-1/3 bg-slate-100/50 border-r border-slate-200 h-screen overflow-y-auto flex flex-col">
+        <div className="px-6 py-5 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 flex justify-between items-center z-10 shadow-sm">
+          <h2 className="text-sm font-black uppercase tracking-widest text-slate-800">Directorio de Clientes</h2>
           <button 
             onClick={() => router.push('/admin')} 
-            className="text-xs font-semibold text-slate-500 hover:text-slate-800 border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded transition-all"
+            className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-400 shadow-sm px-3 py-1.5 rounded-lg transition-all active:scale-95"
           >
             Volver
           </button>
         </div>
         
         {loading ? (
-          <div className="p-10 text-center text-sm font-medium text-slate-400 animate-pulse">Cargando registros...</div>
+          <div className="p-10 text-center text-sm font-medium text-slate-400 animate-pulse">Sincronizando registros...</div>
         ) : (
-          <div className="divide-y divide-slate-100">
-            {clientes.map(cliente => (
-              <div 
-                key={cliente.id} 
-                onClick={() => setClienteSeleccionado(cliente)}
-                className={`p-5 cursor-pointer transition-all border-l-4 ${
-                  clienteSeleccionado?.id === cliente.id 
-                    ? 'bg-slate-50 border-slate-800' 
-                    : 'border-transparent hover:bg-slate-50'
-                }`}
-              >
-                <h3 className={`font-semibold ${clienteSeleccionado?.id === cliente.id ? 'text-slate-900' : 'text-slate-700'}`}>
-                  {cliente.nombre}
-                </h3>
-                <p className="text-xs text-slate-500 font-mono mt-1">{cliente.telefono}</p>
-                <div className="flex gap-2 items-center mt-3">
-                  <span className="text-[10px] font-semibold border border-slate-200 text-slate-500 px-2 py-0.5 rounded-md">
-                    {cliente.historial?.length} tickets
-                  </span>
-                  <span className="text-[10px] font-bold border border-slate-800 text-slate-800 px-2 py-0.5 rounded-md">
-                    LTV: ${cliente.total_gastado}
-                  </span>
+          <div className="p-4 space-y-3">
+            {clientes.map(cliente => {
+              const isActive = clienteSeleccionado?.id === cliente.id;
+              return (
+                <div 
+                  key={cliente.id} 
+                  onClick={() => setClienteSeleccionado(cliente)}
+                  className={`relative p-5 cursor-pointer rounded-2xl transition-all duration-200 border group
+                    ${isActive 
+                      ? 'bg-white border-blue-500 shadow-md transform scale-[1.02]' 
+                      : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm'
+                    }`}
+                >
+                  {/* Borde izquierdo decorativo para el activo */}
+                  {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1/2 bg-blue-500 rounded-r-full"></div>}
+                  
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className={`font-bold text-sm ${isActive ? 'text-blue-700' : 'text-slate-800'}`}>
+                        {cliente.nombre}
+                      </h3>
+                      <p className="text-xs text-slate-400 font-mono mt-1 flex items-center gap-1">
+                        📱 {cliente.telefono}
+                      </p>
+                    </div>
+                    {/* Flechita que aparece en hover o activo */}
+                    <div className={`text-xl transition-all ${isActive ? 'text-blue-500 translate-x-1' : 'text-slate-300 group-hover:text-blue-300 group-hover:translate-x-1'}`}>
+                      ›
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 items-center mt-4">
+                    <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md">
+                      {cliente.historial?.length} TICKETS
+                    </span>
+                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-md ${isActive ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                      LTV: ${cliente.total_gastado}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* PANEL DERECHO: DETALLE Y MARKETING */}
-      <div className="w-full md:w-2/3 h-screen overflow-y-auto bg-[#f8fafc] p-8">
+      <div className="w-full md:w-2/3 h-screen overflow-y-auto bg-white p-6 md:p-10">
         {clienteSeleccionado ? (
-          <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
+          <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn">
             
-            <div className="bg-white px-8 py-6 rounded-xl border border-slate-200 shadow-sm flex justify-between items-end">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{clienteSeleccionado.nombre}</h2>
-                <p className="text-sm text-slate-500 font-mono mt-1">{clienteSeleccionado.telefono}</p>
+            <div className="bg-slate-900 px-8 py-6 rounded-2xl shadow-lg flex justify-between items-center text-white relative overflow-hidden">
+              <div className="relative z-10">
+                <h2 className="text-2xl font-black tracking-tight">{clienteSeleccionado.nombre}</h2>
+                <p className="text-sm text-slate-400 font-mono mt-1">{clienteSeleccionado.telefono}</p>
               </div>
-              <div className="text-right">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Cliente desde</p>
-                <p className="text-sm text-slate-700 font-medium">{new Date(clienteSeleccionado.created_at).toLocaleDateString()}</p>
+              <div className="text-right relative z-10">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Cliente desde</p>
+                <p className="text-sm font-medium">{new Date(clienteSeleccionado.created_at).toLocaleDateString()}</p>
               </div>
+              {/* Decoración geométrica */}
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white opacity-5 rounded-full blur-2xl pointer-events-none"></div>
             </div>
 
-            <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">Acciones Comerciales</h3>
+            {/* ✨ BANNER DE SUGERENCIA INTELIGENTE */}
+            {sugerenciaIA && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="bg-white p-3 rounded-xl shadow-sm text-2xl animate-bounce">
+                    💡
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-1">Sugerencia del Sistema</h4>
+                    <p className="text-sm text-slate-700 font-medium leading-snug">{sugerenciaIA.texto}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => cargarPlantilla(sugerenciaIA.accion)}
+                  className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors shadow-md active:scale-95 flex items-center gap-2"
+                >
+                  {sugerenciaIA.icono} Aplicar Acción
+                </button>
+              </div>
+            )}
+
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-5">Plantillas Comerciales</h3>
               
-             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button 
                   onClick={() => cargarPlantilla('SMARTWATCH')} 
-                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                  className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-center group active:scale-95"
                 >
-                  <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">⌚️</div>
+                  <div className="text-3xl group-hover:scale-110 transition-transform">⌚️</div>
                   <div>
-                    <h4 className="font-semibold text-slate-800 text-sm">Smartwatch</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Cargar plantilla</p>
+                    <h4 className="font-bold text-slate-800 text-xs uppercase">Smartwatch</h4>
                   </div>
                 </button>
                 
                 <button 
                   onClick={() => cargarPlantilla('DESCUENTO_REPARACION')} 
-                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                  className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-center group active:scale-95"
                 >
-                  <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">🎟️</div>
+                  <div className="text-3xl group-hover:scale-110 transition-transform">🎟️</div>
                   <div>
-                    <h4 className="font-semibold text-slate-800 text-sm">Cupón 15%</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Cargar plantilla</p>
+                    <h4 className="font-bold text-slate-800 text-xs uppercase">Cupón 15%</h4>
                   </div>
                 </button>
                 
                 <button 
                   onClick={() => cargarPlantilla('NUEVO_INVENTARIO')} 
-                  className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-400 hover:shadow-sm transition-all text-left"
+                  className="flex flex-col items-center justify-center gap-2 p-4 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-center group active:scale-95"
                 >
-                  <div className="bg-slate-100 text-slate-600 p-2 rounded-md text-lg leading-none">📱</div>
+                  <div className="text-3xl group-hover:scale-110 transition-transform">📱</div>
                   <div>
-                    <h4 className="font-semibold text-slate-800 text-sm">Catálogo</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Cargar plantilla</p>
+                    <h4 className="font-bold text-slate-800 text-xs uppercase">Catálogo</h4>
                   </div>
                 </button>
               </div>
 
-              {/* ✨ NUEVO: REDACTOR PERSONALIZADO */}
-              <div className="mt-8 border-t border-slate-200 pt-6">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Asistente de Redacción Integrado</h3>
+              {/* REDACTOR PERSONALIZADO */}
+              <div className="mt-8 border-t border-slate-100 pt-6">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Redactor del Mensaje</h3>
                 <textarea
                   value={mensajePersonalizado}
                   onChange={(e) => setMensajePersonalizado(e.target.value)}
-                  placeholder="Ej. Nos acaba de llegar el Motorola RAZR 2024 y el OnePlus 13R a un excelente precio..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700 outline-none focus:border-slate-400 focus:bg-white transition-all h-28 resize-none"
+                  placeholder="El texto de tu promoción aparecerá aquí..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all h-32 resize-none"
                 ></textarea>
                 
-                <div className="flex gap-3 mt-3">
+                <div className="flex flex-col sm:flex-row gap-3 mt-4">
                   <button
                     onClick={mejorarMensajeIA}
                     disabled={mejorandoConIA || !mensajePersonalizado}
-                    className="flex-1 bg-white border border-slate-200 text-slate-700 font-semibold text-sm py-2.5 rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 bg-white border border-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:border-slate-400 hover:bg-slate-50 transition-all disabled:opacity-50"
                   >
-                    <span></span> {mejorandoConIA ? 'Generando estructura...' : 'Mejorar Estructura'}
+                    {mejorandoConIA ? '✨ Procesando...' : '✨ Mejorar Texto'}
                   </button>
                   <button
                     onClick={enviarMensajeLibre}
                     disabled={!mensajePersonalizado}
-                    className="flex-1 bg-slate-900 text-white font-semibold text-sm py-2.5 rounded-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 bg-[#25D366] hover:bg-[#1DA851] text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-xl transition-all shadow-lg shadow-green-500/20 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
                   >
-                    <span></span> Enviar por WhatsApp
+                    💬 Enviar por WhatsApp
                   </button>
                 </div>
               </div>
 
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-8 py-5 border-b border-slate-100 bg-white">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            {/* HISTORIAL DE SERVICIOS */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-8 py-5 border-b border-slate-100 bg-slate-50">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">
                   Historial de Servicios ({clienteSeleccionado.historial?.length})
                 </h3>
               </div>
@@ -235,21 +298,21 @@ export default function CRMClientes() {
                 {clienteSeleccionado.historial?.map((ticket: any) => (
                   <div key={ticket.id} className="px-8 py-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
                     <div>
-                      <div className="font-semibold text-slate-800">
+                      <div className="font-bold text-sm text-slate-800">
                         {ticket.equipos?.marca} {ticket.equipos?.modelo}
                       </div>
                       <div className="text-xs font-medium text-slate-500 mt-1">
-                        Servicio: <span className="font-normal text-slate-600">{ticket.falla_reportada}</span>
+                        Falla: <span className="font-normal text-slate-600">{ticket.falla_reportada}</span>
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-2">
-                        {new Date(ticket.created_at).toLocaleDateString()} &bull; {new Date(ticket.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">
+                        {new Date(ticket.created_at).toLocaleDateString()}
                       </div>
                     </div>
                     <div className="text-right flex flex-col items-end">
-                      <div className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 border border-slate-200 rounded text-slate-500 mb-2">
+                      <div className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-slate-100 rounded-md text-slate-600 mb-2">
                         {ticket.estado.replace(/_/g, ' ')}
                       </div>
-                      <div className="font-bold text-slate-900">${ticket.costo_total || 0}</div>
+                      <div className="font-black text-slate-900">${ticket.costo_total || 0}</div>
                     </div>
                   </div>
                 ))}
@@ -264,11 +327,11 @@ export default function CRMClientes() {
           </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-slate-400">
-             <div className="w-16 h-16 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center mb-4 text-slate-300">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+             <div className="w-20 h-20 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center mb-4 bg-slate-50">
+              <span className="text-3xl opacity-50">👥</span>
             </div>
-            <p className="font-semibold text-slate-600">Ningún perfil seleccionado</p>
-            <p className="text-sm mt-1">Elige un cliente de la lista para gestionar su cuenta.</p>
+            <p className="font-black text-slate-700 text-lg">Panel en Espera</p>
+            <p className="text-sm mt-1 font-medium text-slate-500">Selecciona un cliente de la lista para gestionar su perfil.</p>
           </div>
         )}
       </div>
