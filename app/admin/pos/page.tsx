@@ -6,24 +6,24 @@ import { useRouter } from 'next/navigation';
 export default function PuntoDeVenta() {
   const router = useRouter();
   
-  // Estados
   const [inventario, setInventario] = useState<any[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [producto, setProducto] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [cargandoCatalogo, setCargandoCatalogo] = useState(true);
   
-  // ✨ NUEVO: Base de datos de clientes para el autocompletado
   const [clientesBd, setClientesBd] = useState<any[]>([]);
+  
+  // ✨ NUEVO ESTADO: Vendedor activo
+  const [vendedorActivo, setVendedorActivo] = useState('Admin');
 
-  // Datos de la Venta
   const [formVenta, setFormVenta] = useState({
     metodo_pago: 'Efectivo',
-    detalles_extras: 'Caja original y cargador.',
-    cantidad: 1
+    detalles_extras: 'Solo equipo (Sin accesorios)',
+    cantidad: 1,
+    comision_monto: '' // ✨ NUEVO: Campo para la comisión
   });
 
-  // ✨ NUEVO: Datos del cliente inteligente
   const [formCliente, setFormCliente] = useState({
     telefono: '',
     nombre: '',
@@ -31,12 +31,22 @@ export default function PuntoDeVenta() {
   });
 
   useEffect(() => {
-    // Cargar Inventario y Clientes al mismo tiempo
+    // ✨ LEER SESIÓN ACTIVA PARA EL VENDEDOR
+    const sesionGuardada = localStorage.getItem('movilplace_user');
+    if (sesionGuardada) {
+      try {
+        const usuario = JSON.parse(sesionGuardada);
+        setVendedorActivo(usuario.nombre || usuario.name || 'Admin');
+      } catch (error) {
+        setVendedorActivo(sesionGuardada);
+      }
+    }
+
     const cargarDatos = async () => {
       try {
         const [resInv, resCli] = await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventario`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/crm`) // Asegúrate de que esta ruta traiga tus clientes
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/crm`)
         ]);
 
         if (resInv.ok) {
@@ -56,11 +66,8 @@ export default function PuntoDeVenta() {
     cargarDatos();
   }, []);
 
-  // ✨ NUEVO: Lógica del autocompletado
   const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const tel = e.target.value.replace(/\D/g, ''); // Limpiar para que sean solo números
-    
-    // Buscar si el cliente ya existe
+    const tel = e.target.value.replace(/\D/g, ''); 
     const clienteExistente = clientesBd.find(c => String(c.telefono).includes(tel) && tel.length >= 10);
 
     if (clienteExistente) {
@@ -84,10 +91,11 @@ export default function PuntoDeVenta() {
           precio_unitario: producto.precio_venta,
           metodo_pago: formVenta.metodo_pago,
           detalles_regalo_accesorios: formVenta.detalles_extras,
-          // ✨ NUEVO: Mandamos la info del cliente al backend
           cliente_id: formCliente.id,
           cliente_nombre: formCliente.nombre || 'Público en General',
-          cliente_telefono: formCliente.telefono
+          cliente_telefono: formCliente.telefono,
+          vendedor: vendedorActivo, // ✨ ENVIAMOS EL VENDEDOR
+          comision_monto: formVenta.comision_monto ? parseFloat(formVenta.comision_monto) : 0 // ✨ ENVIAMOS LA COMISIÓN
         })
       });
 
@@ -119,13 +127,17 @@ export default function PuntoDeVenta() {
         <button onClick={() => router.push('/admin')} className="text-slate-400 hover:text-white font-bold transition">
           ⬅️ Volver al panel
         </button>
-        <button 
-          onClick={() => router.push('/admin/pos/historial')} 
-          className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl border border-slate-700 transition"
-        >
-          📋 Ver Registro de Ventas
-        </button>
-        <h2 className="text-xl font-black text-white uppercase tracking-widest">🛒 Punto de Venta</h2>
+        <div className="flex gap-3 items-center">
+          <span className="text-xs text-slate-400 font-bold bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            👤 Vendedor: {vendedorActivo}
+          </span>
+          <button 
+            onClick={() => router.push('/admin/pos/historial')} 
+            className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl border border-slate-700 transition"
+          >
+            📋 Historial Ventas
+          </button>
+        </div>
       </div>
 
       <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
@@ -175,7 +187,7 @@ export default function PuntoDeVenta() {
                                 SKU: {item.sku}
                               </span>
                               <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${item.cantidad > 0 ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-red-100 text-red-600 border border-red-200'}`}>
-                                {item.cantidad > 0 ? `${item.cantidad} Disponibles` : 'Agotado'}
+                                {item.cantidad > 0 ? `${item.cantidad} Disp` : 'Agotado'}
                               </span>
                             </div>
                             <h4 className="font-black text-slate-800 text-base leading-tight mb-1 group-hover:text-blue-700 transition-colors">
@@ -183,7 +195,7 @@ export default function PuntoDeVenta() {
                             </h4>
                           </div>
                           <div className="mt-5 flex justify-between items-end border-t border-slate-200/80 pt-3">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Precio de Venta</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Precio</span>
                             <span className="font-black text-xl text-slate-800 group-hover:text-blue-600 transition-colors">
                               ${parseFloat(item.precio_venta).toFixed(2)}
                             </span>
@@ -222,9 +234,7 @@ export default function PuntoDeVenta() {
           </div>
         )}
 
-        {/* =========================================================================
-            VISTA 2: ÁREA DE COBRO
-            ========================================================================= */}
+        {/* ÁREA DE COBRO */}
         {producto && (
           <div className="space-y-6 animate-fadeIn">
             
@@ -235,21 +245,27 @@ export default function PuntoDeVenta() {
               ✖️ Cancelar y elegir otro artículo
             </button>
 
-            <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-6 flex justify-between items-center">
-              <div>
+            {/* Ficha técnica del equipo seleccionado */}
+            <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-6 flex justify-between items-center relative overflow-hidden">
+              <div className="relative z-10">
                 <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-1">{producto.tipo} • SKU: {producto.sku}</p>
                 <h3 className="text-2xl font-black text-slate-800">{producto.nombre}</h3>
-                <p className="text-sm font-bold text-slate-500 mt-1">
-                  Stock Disponible: <span className={producto.cantidad > 0 ? "text-emerald-600" : "text-red-600"}>{producto.cantidad} piezas</span>
-                </p>
+                <div className="flex gap-3 text-[10px] font-mono text-slate-500 mt-2">
+                  {producto.color && <span className="bg-white px-2 py-1 rounded border">Color: {producto.color}</span>}
+                  {producto.imei && <span className="bg-white px-2 py-1 rounded border">IMEI: {producto.imei}</span>}
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-bold text-slate-400 mb-1">Precio Unitario</p>
-                <p className="text-3xl font-black text-emerald-500">${producto.precio_venta}</p>
+              <div className="text-right relative z-10 flex flex-col items-end gap-2">
+                {producto.imagen_url && (
+                  <img src={producto.imagen_url} alt="Dispositivo" className="w-16 h-16 object-cover rounded-lg border-2 border-white shadow-sm" />
+                )}
+                <div>
+                  <p className="text-3xl font-black text-emerald-500">${producto.precio_venta}</p>
+                </div>
               </div>
             </div>
 
-            {/* ✨ NUEVO: SECCIÓN DEL CLIENTE (Buscador Inteligente) */}
+            {/* SECCIÓN DEL CLIENTE */}
             <div className={`p-5 rounded-2xl border-2 transition-all duration-300 ${formCliente.id ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-xs font-black text-slate-600 uppercase tracking-widest">
@@ -285,13 +301,11 @@ export default function PuntoDeVenta() {
                   />
                 </div>
               </div>
-              <p className="text-[10px] text-slate-400 mt-2">
-                * Si es un cliente nuevo, se registrará automáticamente en tu CRM al finalizar la venta.
-              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+            {/* SECCIÓN DE CIERRE DE VENTA */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
                 <label className="block text-xs font-black text-slate-600 uppercase mb-2">¿Qué incluye el equipo? / Regalos</label>
                 <select 
                   className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-3 font-bold text-slate-700 outline-none cursor-pointer text-sm"
@@ -303,30 +317,40 @@ export default function PuntoDeVenta() {
                   <option value="Cargador">Cargador</option>
                   <option value="Caja y Cargador">Caja y Cargador</option>
                   <option value="Vidrio templado">Vidrio templado</option>
-                  <option value="Caja y Vidrio templado">Caja y Vidrio templado</option>
-                  <option value="Cargador y Vidrio templado">Cargador y Vidrio templado</option>
-                  <option value="Caja, Cargador y Vidrio templado">Caja, Cargador y Vidrio templado</option>
-                  <option value="Audífonos">Audífonos</option>
-                  <option value="SmartWatch">SmartWatch</option>
-                  <option value="Caja, Cargador y Audífonos">Caja, Cargador y Audífonos</option>
-                  <option value="Caja, Cargador y SmartWatch">Caja, Cargador y SmartWatch</option>
                   <option value="Paquete Premium (Mica, Funda, Cargador)">Paquete Premium (Mica, Funda, Cargador)</option>
                 </select>
               </div>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-black text-slate-600 uppercase mb-2">Método de Pago</label>
-                  <select 
-                    className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-3 font-bold outline-none cursor-pointer text-sm"
-                    value={formVenta.metodo_pago}
-                    onChange={e => setFormVenta({...formVenta, metodo_pago: e.target.value})}
-                  >
-                    <option value="Efectivo">💵 Efectivo</option>
-                    <option value="Transferencia">📱 Transferencia</option>
-                    <option value="Tarjeta">💳 Tarjeta (Terminal)</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs font-black text-slate-600 uppercase mb-2">Método de Pago</label>
+                <select 
+                  className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-3 font-bold outline-none cursor-pointer text-sm"
+                  value={formVenta.metodo_pago}
+                  onChange={e => setFormVenta({...formVenta, metodo_pago: e.target.value})}
+                >
+                  <option value="Efectivo">💵 Efectivo</option>
+                  <option value="Transferencia">📱 Transferencia</option>
+                  <option value="Tarjeta">💳 Tarjeta (Terminal)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* ✨ NUEVO: SECCIÓN DE COMISIONES */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-black text-amber-800 uppercase tracking-widest">Asignar Comisión</h4>
+                <p className="text-[10px] text-amber-600 font-medium mt-0.5">Vendedor actual: {vendedorActivo}</p>
+              </div>
+              <div className="relative w-32">
+                <span className="absolute left-3 top-2 text-slate-500 font-bold">$</span>
+                <input 
+                  type="number"
+                  min="0"
+                  placeholder="0.00"
+                  className="w-full pl-7 pr-3 py-2 bg-white border border-amber-300 rounded-lg text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-amber-400"
+                  value={formVenta.comision_monto}
+                  onChange={e => setFormVenta({...formVenta, comision_monto: e.target.value})}
+                />
               </div>
             </div>
 
@@ -339,9 +363,6 @@ export default function PuntoDeVenta() {
                 <span>{loading ? 'Procesando...' : 'Cobrar Venta'}</span>
                 <span>${(producto.precio_venta * formVenta.cantidad).toFixed(2)}</span>
               </button>
-              {producto.cantidad < 1 && (
-                <p className="text-center text-red-500 font-bold text-xs mt-3">No puedes vender este artículo porque el stock está en 0.</p>
-              )}
             </div>
 
           </div>
