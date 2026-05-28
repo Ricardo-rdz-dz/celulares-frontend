@@ -315,10 +315,13 @@ export default function TicketManual() {
               </>
             ) : (
               <>
-                <p className="font-bold text-center border-b border-gray-300 pb-1 uppercase mb-1">Políticas de Garantía de Venta</p>
-                <p>• Los equipos cuentan con 30 días de garantía contra defectos de fábrica.</p>
-                <p>• La garantía queda ANULADA si presenta golpes, humedad, software alterado o sellos rotos.</p>
-                <p>• No hay cambios en accesorios. Indispensable presentar esta nota para cualquier reclamación.</p>
+               <p className="font-bold text-center border-b border-gray-300 pb-1 uppercase mb-1">Políticas de Garantía de Venta</p>
+          <p>• Los equipos cuentan con <span className="font-bold">30 días de garantía</span> exclusivamente contra defectos de fábrica a partir de la fecha de esta nota.</p>
+          <p>• <span className="font-bold underline">La garantía queda ANULADA</span> si el equipo presenta golpes, raspones, humedad, pantallas estrelladas, alteraciones de software o por arrepentimiento del cliente.</p>
+          <p>• Para artículos de electrónica o accesorios, NO aplican cambios ni devoluciones. Solicita que se revisen al momento de la compra.</p>
+          <p>• Es estrictamente indispensable presentar este comprobante original para validar cualquier garantía. Sin nota, no hay garantía.</p>
+          <p>• En caso de requerir garantía, el cliente debe primero comunicarse con nosotros para después acudir a nuestras instalaciones para que un técnico revise el equipo y determine si aplica la garantía o no.</p>
+        
               </>
             )}
           </div>
