@@ -342,36 +342,67 @@ export default function TicketManual() {
             )}
           </div>
 
-          {/* QRS Y FIRMAS (Márgenes superiores reducidos, QRs de 64px mantenidos) */}
-          <div className="mt-auto pt-3 border-t-2 border-dashed border-gray-300">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="p-1.5 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
-                <p className="font-black text-[9px] tracking-wide mb-1">¡TU OPINIÓN!</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-16 h-16"/>
+          {/* QRS Y FIRMAS (Diseño estructurado estilo tarjetas) */}
+          <div className="mt-auto pt-4 border-t-2 border-black">
+            <div className="grid grid-cols-3 gap-3">
+
+              {/* Tarjeta 1: Encuesta */}
+              <div className="border border-black rounded-lg flex flex-col overflow-hidden">
+                <div 
+                  className="bg-gray-100 border-b border-black py-1 px-1 text-center" 
+                  style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+                >
+                  <p className="font-black text-[8.5px] uppercase tracking-wide">¡Tu opinión cuenta!</p>
+                </div>
+                <div className="p-1.5 flex flex-col items-center bg-white text-center flex-grow justify-center">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://forms.gle/TdJQcXYvyqJias5p6" className="w-14 h-14 mb-1.5"/>
+                  <p className="text-[7.5px] leading-tight font-bold text-gray-700">Ayúdanos a mejorar llenando esta breve encuesta de satisfacción.</p>
+                </div>
               </div>
 
-              <div className="p-1.5 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
-                <p className="font-black text-[9px] tracking-wide mb-1">OFERTAS VIP</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=AQUI_PON_TU_LINK_DEL_CANAL" className="w-16 h-16"/>
+              {/* Tarjeta 2: Canal VIP */}
+              <div className="border border-black rounded-lg flex flex-col overflow-hidden">
+                <div 
+                  className="bg-gray-100 border-b border-black py-1 px-1 text-center" 
+                  style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+                >
+                  <p className="font-black text-[8.5px] uppercase tracking-wide">Únete al Canal VIP</p>
+                </div>
+                <div className="p-1.5 flex flex-col items-center bg-white text-center flex-grow justify-center">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=AQUI_PON_TU_LINK_DEL_CANAL" className="w-14 h-14 mb-1.5"/>
+                  <p className="text-[7.5px] leading-tight font-bold text-gray-700">Escanea para recibir ofertas exclusivas y remates antes que nadie.</p>
+                </div>
               </div>
 
-              <div className="p-1.5 border border-black border-dashed rounded text-center flex flex-col items-center bg-gray-50">
-                <p className="font-black text-[9px] tracking-wide mb-1">⭐⭐⭐⭐⭐</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-16 h-16"/>
+              {/* Tarjeta 3: Reseña */}
+              <div className="border border-black rounded-lg flex flex-col overflow-hidden">
+                <div 
+                  className="bg-gray-100 border-b border-black py-1 px-1 text-center" 
+                  style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+                >
+                  <p className="font-black text-[8.5px] uppercase tracking-wide">⭐⭐⭐⭐⭐ Reseña</p>
+                </div>
+                <div className="p-1.5 flex flex-col items-center bg-white text-center flex-grow justify-center">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://maps.app.goo.gl/JtQShVkZDMFvYm9z9" className="w-14 h-14 mb-1.5"/>
+                  <p className="text-[7.5px] leading-tight font-bold text-gray-700">¿Te gustó nuestro servicio? Apóyanos con 5 estrellas en Google.</p>
+                </div>
               </div>
+
             </div>
 
-            <div className="pt-4 grid grid-cols-2 gap-8 text-center">
+            {/* Firmas */}
+            <div className="pt-6 grid grid-cols-2 gap-10 text-center px-6">
               <div>
-                <div className="border-b-2 border-black w-full h-6"></div>
-                <p className="text-[10px] font-bold mt-1 uppercase tracking-tighter">Firma Cliente</p>
+                <div className="border-b-2 border-black w-full h-5"></div>
+                <p className="text-[10px] font-black mt-1.5 uppercase tracking-widest text-gray-800">Firma Cliente</p>
               </div>
               <div>
-                <div className="border-b-2 border-black w-full h-6"></div>
-                <p className="text-[10px] font-bold mt-1 uppercase tracking-tighter">Firma MovilPlace</p>
+                <div className="border-b-2 border-black w-full h-5"></div>
+                <p className="text-[10px] font-black mt-1.5 uppercase tracking-widest text-gray-800">Firma MovilPlace</p>
               </div>
             </div>
-            <p className="text-xs font-black uppercase tracking-wider text-center pt-2">
+            
+            <p className="text-xs font-black uppercase tracking-widest text-center pt-4 pb-1">
               {tipoTicket.includes('VENTA') ? '¡Gracias por tu compra!' : '¡Gracias por tu preferencia!'}
             </p>
           </div>
