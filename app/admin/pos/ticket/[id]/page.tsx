@@ -36,17 +36,33 @@ export default function NotaDeVenta() {
   }, [id]); 
 
   useEffect(() => {
-    if (venta && qrsCargados >= 3) {
+    if (venta && venta.id && qrsCargados >= 3) {
       setTimeout(() => {
         window.print();
       }, 300); 
     }
   }, [venta, qrsCargados]);
 
-  if (loading) return <div className="text-center mt-10 font-bold text-xl">Generando Nota de Venta...</div>;
-  if (!venta) return <div className="text-center mt-10 text-xl">Venta no encontrada.</div>;
+  if (loading) return <div className="text-center mt-10 font-bold text-xl text-slate-700">Generando Nota de Venta...</div>;
+  
+  // ✨ PROTECCIÓN ANTI-CRASH: Verificamos que 'venta' exista y que tenga un 'id' válido
+  if (!venta || !venta.id) {
+    return (
+      <div className="text-center mt-12 p-8 bg-red-50 border-2 border-red-200 rounded-2xl max-w-md mx-auto text-slate-800 shadow-md">
+        <p className="text-red-600 font-black text-xl mb-2">⚠️ No se pudo cargar el ticket</p>
+        <p className="text-xs font-bold text-slate-500 mb-6">{venta?.error || 'Hubo un problema de conexión o el ID no existe.'}</p>
+        <button 
+          onClick={() => router.push('/admin/pos')} 
+          className="bg-slate-900 text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest hover:bg-slate-800 transition"
+        >
+          ⬅️ Volver al Punto de Venta
+        </button>
+      </div>
+    );
+  }
 
-  const folioVenta = venta.id.split('-')[0].toUpperCase();
+  // Ahora es 100% seguro hacer el split
+  const folioVenta = String(venta.id).split('-')[0].toUpperCase();
   const equipo = venta.inventario || {};
 
   return (
@@ -62,10 +78,10 @@ export default function NotaDeVenta() {
 
       {/* BOTONES AUXILIARES */}
       <div className="mb-3 flex justify-between items-center border-b pb-1 print-hidden">
-        <button onClick={() => router.push('/admin/pos')} className="border px-4 py-2 rounded hover:bg-slate-50 font-medium">
+        <button onClick={() => router.push('/admin/pos')} className="border px-4 py-2 rounded hover:bg-slate-50 font-medium text-xs">
           ⬅️ Nueva Venta
         </button>
-        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-emerald-700">
+        <button onClick={() => window.print()} className="bg-emerald-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-emerald-700 text-xs">
           🖨️ Imprimir Ticket
         </button>
       </div>
@@ -97,7 +113,7 @@ export default function NotaDeVenta() {
             <p><strong>TELÉFONO:</strong> {venta.clientes?.telefono || 'N/A'}</p>
           </div>
 
-          {/* ✨ DETALLE DEL PRODUCTO VENDIDO (Con IMEI, Color, Serie y Descripción) */}
+          {/* DETALLE DEL PRODUCTO VENDIDO */}
           <div className="border-t-2 border-b-2 border-dashed border-black py-3 my-2">
             <table className="w-full text-base font-mono">
               <thead>
@@ -122,20 +138,19 @@ export default function NotaDeVenta() {
                     )}
                     
                     {/* Detalles Técnicos */}
-                    <div className="space-y-1">
+                    <div className="space-y-1 w-full">
                       <span className="text-lg font-black text-black">{equipo.nombre || 'Artículo de Tienda'}</span>
                       <br/>
                       {equipo.sku && <span className="text-xs font-normal text-gray-500">SKU: {equipo.sku}</span>}
                       
-                      {/* Descripción extra si la pusieron */}
                       {equipo.descripcion && (
-                        <p className="text-xs font-normal text-gray-700 italic bg-gray-50 p-1 border border-gray-200 mt-1">
+                        <p className="text-xs font-normal text-gray-700 italic bg-gray-50 p-1.5 border border-gray-200 mt-1">
                           "{equipo.descripcion}"
                         </p>
                       )}
 
-                      {/* Caja de especificaciones técnicas (IMEI, Color, Serie) */}
-                      <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-black font-mono bg-blue-50/50 p-2 border border-blue-100 rounded">
+                      {/* Especificaciones técnicas (IMEI, Color, Serie) */}
+                      <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-black font-mono bg-blue-50/40 p-2 border border-blue-100 rounded">
                         <p>Color: <span className="font-bold uppercase">{equipo.color || 'No especificado'}</span></p>
                         <p>Serie: <span className="font-bold">{equipo.numero_serie || 'N/A'}</span></p>
                         <p className="col-span-2">IMEI: <span className="font-bold tracking-widest bg-white px-1.5 py-0.5 border border-gray-300 inline-block mt-0.5">{equipo.imei || 'NO REGISTRADO'}</span></p>
@@ -143,7 +158,7 @@ export default function NotaDeVenta() {
                     </div>
 
                   </td>
-                  <td className="pt-3 text-right align-top font-black text-xl">${Number(venta.total).toFixed(2)}</td>
+                  <td className="pt-3 text-right align-top font-black text-xl">${Number(venta.total || 0).toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
@@ -165,7 +180,7 @@ export default function NotaDeVenta() {
           {/* TOTALES */}
           <div className="flex justify-end text-lg font-bold font-mono my-2">
             <div className="w-64 border-2 border-black flex justify-between p-2.5 bg-gray-100 text-xl font-black">
-              <span>TOTAL PAGADO:</span><span>${Number(venta.total).toFixed(2)}</span>
+              <span>TOTAL PAGADO:</span><span>${Number(venta.total || 0).toFixed(2)}</span>
             </div>
           </div>
 
