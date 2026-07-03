@@ -83,7 +83,6 @@ export default function PuntoDeVenta() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // ✨ CORRECCIÓN CLAVE: Mandamos ambos nombres de ID para blindar la relación con Supabase
           producto_id: producto.id,
           inventario_id: producto.id,
           cantidad: formVenta.cantidad,
@@ -99,14 +98,20 @@ export default function PuntoDeVenta() {
       });
 
       const data = await res.json();
-
-      // ✨ SOLUCIÓN: Buscamos el ID en cualquiera de las formas posibles
-      const idVentaGenerado = data.venta_id || data.id || data.venta?.id;
+      console.log("📦 Respuesta real del backend al cobrar:", data);
       
-      if (res.ok && data.success) {
-        router.push(`/admin/pos/ticket/${data.venta_id}`);
+      // ✨ EXTRACCIÓN BLINDADA: Busca el ID en TODAS las formas posibles que devuelve Node/Supabase
+      const idVentaGenerado = data.venta_id 
+        || data.id 
+        || data.venta?.id 
+        || (Array.isArray(data) && data[0]?.id)
+        || (data.data && data.data.id)
+        || (Array.isArray(data.data) && data.data[0]?.id);
+      
+      if (res.ok && idVentaGenerado) {
+        router.push(`/admin/pos/ticket/${idVentaGenerado}`);
       } else {
-        alert(`Error al guardar: ${data.error}`);
+        alert(`⚠️ Venta procesada, pero el servidor no devolvió un ID legible.\nRevisa la consola (F12) para ver la respuesta.`);
       }
     } catch (err) {
       console.error(err);
