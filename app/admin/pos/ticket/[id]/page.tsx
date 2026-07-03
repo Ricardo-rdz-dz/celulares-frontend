@@ -25,10 +25,20 @@ export default function NotaDeVenta() {
     const fetchVenta = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ventas/${id}`); 
+        
+        // Si el servidor responde con error, lo atrapamos antes de que rompa el JSON
+        if (!res.ok) {
+          console.error("El servidor devolvió un estado de error:", res.status);
+          setVenta({ error: `Código de error del servidor: ${res.status}` });
+          setLoading(false);
+          return;
+        }
+
         const data = await res.json();
         setVenta(data);
       } catch (error) {
         console.error("Error cargando venta:", error);
+        setVenta({ error: "No se pudo conectar con el servidor backend." });
       }
       setLoading(false);
     };
@@ -45,12 +55,12 @@ export default function NotaDeVenta() {
 
   if (loading) return <div className="text-center mt-10 font-bold text-xl text-slate-700">Generando Nota de Venta...</div>;
   
-  // ✨ PROTECCIÓN ANTI-CRASH: Verificamos que 'venta' exista y que tenga un 'id' válido
-  if (!venta || !venta.id) {
+  // Si la venta viene vacía, con error, o no tiene ID, mostramos la pantalla de aviso amigable
+  if (!venta || !venta.id || venta.error) {
     return (
       <div className="text-center mt-12 p-8 bg-red-50 border-2 border-red-200 rounded-2xl max-w-md mx-auto text-slate-800 shadow-md">
-        <p className="text-red-600 font-black text-xl mb-2">⚠️ No se pudo cargar el ticket</p>
-        <p className="text-xs font-bold text-slate-500 mb-6">{venta?.error || 'Hubo un problema de conexión o el ID no existe.'}</p>
+        <p className="text-red-600 font-black text-xl mb-2">⚠️ Nota de venta no disponible</p>
+        <p className="text-xs font-bold text-slate-500 mb-6">{venta?.error || 'ID de ticket inválido o la venta no existe en la base de datos.'}</p>
         <button 
           onClick={() => router.push('/admin/pos')} 
           className="bg-slate-900 text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-widest hover:bg-slate-800 transition"
@@ -61,9 +71,14 @@ export default function NotaDeVenta() {
     );
   }
 
-  // Ahora es 100% seguro hacer el split
-  const folioVenta = String(venta.id).split('-')[0].toUpperCase();
-  const equipo = venta.inventario || {};
+  // Sacamos el Folio de forma segura sin usar split si el id no es un string largo
+  const folioVenta = venta.id && String(venta.id).includes('-') 
+    ? String(venta.id).split('-')[0].toUpperCase() 
+    : String(venta.id).substring(0, 6).toUpperCase();
+
+  // ✨ AQUÍ ESTÁ EL TRUCO: Tu backend manda el objeto dentro de un arreglo o directo. 
+  // Evaluamos ambas opciones para que jale sí o sí con lo que ya tenías guardado.
+  const equipo = Array.isArray(venta.inventario) ? venta.inventario[0] : (venta.inventario || {});
 
   return (
     <div className="w-full max-w-[21cm] mx-auto bg-white text-black font-sans print:w-[21cm] print:h-[28cm]">
@@ -109,8 +124,8 @@ export default function NotaDeVenta() {
 
           {/* DATOS DEL CLIENTE */}
           <div className="border border-black p-3 text-sm grid grid-cols-2 gap-4 my-2 bg-gray-50/50">
-            <p><strong>CLIENTE:</strong> {venta.clientes?.nombre ? venta.clientes.nombre.toUpperCase() : 'PÚBLICO EN GENERAL'}</p>
-            <p><strong>TELÉFONO:</strong> {venta.clientes?.telefono || 'N/A'}</p>
+            <p><strong>CLIENTE:</strong> {venta.clientes?.nombre ? venta.clientes.nombre.toUpperCase() : (venta.cliente_nombre || 'PÚBLICO EN GENERAL').toUpperCase()}</p>
+            <p><strong>TELÉFONO:</strong> {venta.clientes?.telefono || venta.cliente_telefono || 'N/A'}</p>
           </div>
 
           {/* DETALLE DEL PRODUCTO VENDIDO */}
@@ -125,10 +140,10 @@ export default function NotaDeVenta() {
               </thead>
               <tbody>
                 <tr className="font-bold text-lg">
-                  <td className="pt-3 align-top">{venta.cantidad}x</td>
+                  <td className="pt-3 align-top">{venta.cantidad || 1}x</td>
                   <td className="pt-3 leading-tight flex gap-4 items-start">
                     
-                    {/* Miniatura de la Foto */}
+                    {/* Miniatura de la Foto si existe */}
                     {equipo.imagen_url && (
                       <img 
                         src={equipo.imagen_url} 
@@ -139,7 +154,7 @@ export default function NotaDeVenta() {
                     
                     {/* Detalles Técnicos */}
                     <div className="space-y-1 w-full">
-                      <span className="text-lg font-black text-black">{equipo.nombre || 'Artículo de Tienda'}</span>
+                      <span className="text-lg font-black text-black">{equipo.nombre || venta.producto_nombre || 'Artículo de Tienda'}</span>
                       <br/>
                       {equipo.sku && <span className="text-xs font-normal text-gray-500">SKU: {equipo.sku}</span>}
                       
