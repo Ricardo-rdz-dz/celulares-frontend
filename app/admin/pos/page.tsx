@@ -1,4 +1,3 @@
-//Punto de venta 
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,14 +13,13 @@ export default function PuntoDeVenta() {
   
   const [clientesBd, setClientesBd] = useState<any[]>([]);
   
-  // ✨ NUEVO ESTADO: Vendedor activo
   const [vendedorActivo, setVendedorActivo] = useState('Admin');
 
   const [formVenta, setFormVenta] = useState({
     metodo_pago: 'Efectivo',
     detalles_extras: 'Solo equipo (Sin accesorios)',
     cantidad: 1,
-    comision_monto: '' // ✨ NUEVO: Campo para la comisión
+    comision_monto: ''
   });
 
   const [formCliente, setFormCliente] = useState({
@@ -31,7 +29,6 @@ export default function PuntoDeVenta() {
   });
 
   useEffect(() => {
-    // ✨ LEER SESIÓN ACTIVA PARA EL VENDEDOR
     const sesionGuardada = localStorage.getItem('movilplace_user');
     if (sesionGuardada) {
       try {
@@ -86,7 +83,9 @@ export default function PuntoDeVenta() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // ✨ CORRECCIÓN CLAVE: Mandamos ambos nombres de ID para blindar la relación con Supabase
           producto_id: producto.id,
+          inventario_id: producto.id,
           cantidad: formVenta.cantidad,
           precio_unitario: producto.precio_venta,
           metodo_pago: formVenta.metodo_pago,
@@ -94,8 +93,8 @@ export default function PuntoDeVenta() {
           cliente_id: formCliente.id,
           cliente_nombre: formCliente.nombre || 'Público en General',
           cliente_telefono: formCliente.telefono,
-          vendedor: vendedorActivo, // ✨ ENVIAMOS EL VENDEDOR
-          comision_monto: formVenta.comision_monto ? parseFloat(formVenta.comision_monto) : 0 // ✨ ENVIAMOS LA COMISIÓN
+          vendedor: vendedorActivo,
+          comision_monto: formVenta.comision_monto ? parseFloat(formVenta.comision_monto) : 0
         })
       });
 
@@ -113,9 +112,11 @@ export default function PuntoDeVenta() {
     setLoading(false);
   };
 
+  // ✨ CORRECCIÓN CLAVE: Ahora también puedes buscar escaneando o escribiendo el IMEI directamente
   const inventarioFiltrado = inventario.filter(item => 
     item.nombre?.toLowerCase().includes(busqueda.toLowerCase()) || 
-    item.sku?.toLowerCase().includes(busqueda.toLowerCase())
+    item.sku?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    item.imei?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   const categoriasOrdenadas = ['Celulares', 'Tablets', 'Smartwatch', 'Audífonos', 'Laptops', 'DISPOSITIVO', 'REFACCION'];
@@ -145,11 +146,11 @@ export default function PuntoDeVenta() {
         {!producto && (
           <div className="mb-8 border-b-2 border-slate-100 pb-8">
             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
-              Buscar artículo por Nombre o SKU
+              Buscar artículo por Nombre, SKU o IMEI
             </label>
             <input 
               type="text" autoFocus
-              placeholder="Ej. iPhone 13 o SKU M-001"
+              placeholder="Ej. iPhone 13, SKU M-001 o escanea IMEI..."
               className="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-600 rounded-xl p-4 font-bold text-xl outline-none"
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
@@ -184,7 +185,7 @@ export default function PuntoDeVenta() {
                           <div>
                             <div className="flex justify-between items-start mb-3">
                               <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 group-hover:text-blue-500 transition-colors">
-                                SKU: {item.sku}
+                                SKU: {item.sku || 'N/A'}
                               </span>
                               <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${item.cantidad > 0 ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-red-100 text-red-600 border border-red-200'}`}>
                                 {item.cantidad > 0 ? `${item.cantidad} Disp` : 'Agotado'}
@@ -197,7 +198,7 @@ export default function PuntoDeVenta() {
                           <div className="mt-5 flex justify-between items-end border-t border-slate-200/80 pt-3">
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Precio</span>
                             <span className="font-black text-xl text-slate-800 group-hover:text-blue-600 transition-colors">
-                              ${parseFloat(item.precio_venta).toFixed(2)}
+                              ${parseFloat(item.precio_venta || 0).toFixed(2)}
                             </span>
                           </div>
                         </div>
@@ -248,11 +249,12 @@ export default function PuntoDeVenta() {
             {/* Ficha técnica del equipo seleccionado */}
             <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-6 flex justify-between items-center relative overflow-hidden">
               <div className="relative z-10">
-                <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-1">{producto.tipo} • SKU: {producto.sku}</p>
+                <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-1">{producto.tipo} • SKU: {producto.sku || 'N/A'}</p>
                 <h3 className="text-2xl font-black text-slate-800">{producto.nombre}</h3>
                 <div className="flex gap-3 text-[10px] font-mono text-slate-500 mt-2">
-                  {producto.color && <span className="bg-white px-2 py-1 rounded border">Color: {producto.color}</span>}
-                  {producto.imei && <span className="bg-white px-2 py-1 rounded border">IMEI: {producto.imei}</span>}
+                  {producto.color && <span className="bg-white px-2 py-1 rounded border font-bold">Color: {producto.color}</span>}
+                  {producto.imei && <span className="bg-white px-2 py-1 rounded border font-bold">IMEI: {producto.imei}</span>}
+                  {producto.numero_serie && <span className="bg-white px-2 py-1 rounded border font-bold">Serie: {producto.numero_serie}</span>}
                 </div>
               </div>
               <div className="text-right relative z-10 flex flex-col items-end gap-2">
@@ -335,7 +337,7 @@ export default function PuntoDeVenta() {
               </div>
             </div>
 
-            {/* ✨ NUEVO: SECCIÓN DE COMISIONES */}
+            {/* SECCIÓN DE COMISIONES */}
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <h4 className="text-xs font-black text-amber-800 uppercase tracking-widest">Asignar Comisión</h4>
