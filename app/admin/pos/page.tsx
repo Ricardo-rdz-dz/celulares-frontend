@@ -99,6 +99,9 @@ export default function PuntoDeVenta() {
       });
 
       const data = await res.json();
+
+      // ✨ SOLUCIÓN: Buscamos el ID en cualquiera de las formas posibles
+      const idVentaGenerado = data.venta_id || data.id || data.venta?.id;
       
       if (res.ok && data.success) {
         router.push(`/admin/pos/ticket/${data.venta_id}`);
